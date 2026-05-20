@@ -8,11 +8,7 @@ from PIL import Image
 
 import os
 
-try:
-    from sam3.model_builder import build_sam3_image_model
-    from sam3.model.sam3_image_processor import Sam3Processor
-except ImportError:
-    pass
+# sam3 和 triton 的 import 延迟到 QThread.run() 内部进行，避免 DLL 加载问题阻止模块导入
 
 try:
     from sam2.build_sam import build_sam2
@@ -105,11 +101,16 @@ class Sam3ModelLoadWorker(QThread):
 
     def run(self):
         try:
+            # 在 QThread 内部延迟导入，避免 triton DLL 问题影响模块整体加载
+            from sam3.model_builder import build_sam3_image_model
+            from sam3.model.sam3_image_processor import Sam3Processor
             model = build_sam3_image_model(checkpoint_path=self.checkpoint_path, enable_inst_interactivity=True)
             model.to("cuda")
             processor = Sam3Processor(model)
             self.loaded.emit(model, processor, True, "模型加载成功")
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             self.loaded.emit(None, None, False, str(e))
 
 
@@ -451,7 +452,7 @@ class SAMClient(QObject):
                     if self._sam3_worker:
                         self._sam3_worker.inference_state = state
             except Exception as e:
-                print(f"SAM3 图像特征提取失败: {e}")
+                pass
 
         elif self.current_model_type == "sam2":
             if not self.model:
@@ -467,12 +468,19 @@ class SAMClient(QObject):
                 print(f"SAM2 图像特征提取失败: {e}")
 
     def request_inference(self, x, y, is_click):
-        if self._active_worker:
-            self._active_worker.request_inference(x, y, is_click)
+        if not self._active_worker:
+            return
+        if self.current_model_type == "sam3" and hasattr(self._active_worker, 'inference_state') and self._active_worker.inference_state is None:
+            return
+        self._active_worker.request_inference(x, y, is_click)
 
     def request_text_inference(self, prompt_text):
         """文本提示词推理（仅 SAM3 支持）"""
         if self.current_model_type == "sam3" and self._sam3_worker:
+            if self._sam3_worker.inference_state is None:
+                return
+            if self._sam3_worker.processor is None:
+                return
             self._sam3_worker.request_text_inference(prompt_text)
 
     def supports_text_prompt(self):

@@ -18,6 +18,7 @@ huggingface-hub~=0.36.2
 pandas~=2.3.3
 scikit-learn~=1.8.0
 setuptools==79.0.1
+triton-windows
 git+https://github.com/facebookresearch/sam3.git
 git+https://github.com/facebookresearch/sam2.git
 ultralytics==8.4.49

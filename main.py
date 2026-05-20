@@ -1,6 +1,8 @@
 import sys
 import os
 import json
+# 屏蔽 Qt 在 Windows 上透明窗口渲染的无害警告
+os.environ["QT_LOGGING_RULES"] = "qt.core.qwindow.warning=false"
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QInputDialog, QMessageBox, QLabel, QListWidgetItem, QDialog, QMenu, QAbstractItemView
 from PySide6.QtCore import Qt, QPointF, QRectF
 from PySide6.QtGui import QPainter, QIcon, QPixmap, QColor, QAction, QActionGroup, QPolygonF, QMovie

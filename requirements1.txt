@@ -1,5 +1,5 @@
 pyside6~=6.4.2
-numpy>=1.26,<2
+numpy
 opencv-python~=4.11.0.86
 pillow~=10.4.0
 einops~=0.8.2
@@ -19,6 +19,5 @@ pandas~=2.3.3
 scikit-learn~=1.8.0
 setuptools==79.0.1
 git+https://github.com/facebookresearch/sam3.git
-
-
-# python 版本是3.11 torch 版本是2.5.0+cu118
+git+https://github.com/facebookresearch/sam2.git
+ultralytics==8.4.49

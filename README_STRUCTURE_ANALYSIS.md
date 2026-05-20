@@ -502,7 +502,6 @@ YoloPredictorWorker(QThread)            ← 异步 Worker
 
 - 英文 README (`README.md`) 比中文版简短，建议保持内容一致
 - 注意事项：
-  - SAM3 是付费模型 (3.5GB)
   - 国内用户安装 GitHub 依赖可能需要代理或镜像
   - 无 GPU 用户建议用 YOLO 而非 SAM
   - 引用部分需保留模型作者的 bibtex

@@ -16,7 +16,8 @@ try:
     from ui.author_info import AuthorInfoDialog
 except ImportError:
     pass
-from ui.main_window import Ui_MainWindow, TemplateSelectorWidget, FormatSelectorWidget
+from ui.ui_main_window import Ui_MainWindow
+from ui.main_window import TemplateSelectorWidget, FormatSelectorWidget
 from ui.template_dialog import SkeletonTemplateDialog
 from ui.model_selector_dialog import ModelSelectorDialog
 from ui.theme import DARK_THEME, LIGHT_THEME
@@ -33,6 +34,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self._apply_initial_setup()
 
         self.template_manager = TemplateManager()
 
@@ -86,6 +88,87 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def update_predict_icon(self):
         self.btnPredict.setIcon(QIcon(self.predict_movie.currentPixmap()))
+
+    def _apply_initial_setup(self):
+        """UI 初始化：图标着色、ActionGroup、按钮样式等（.ui 无法表达的部分）"""
+        from PySide6.QtWidgets import QSizePolicy
+        from PySide6.QtCore import Qt
+        from PySide6.QtGui import QIcon, QColor, QPixmap, QFont, QActionGroup
+        from PySide6.QtWidgets import QLabel
+
+        self.current_icon_color = QColor(15, 23, 42)
+        _ic = self.current_icon_color
+
+        # QAction 图标着色（.ui 中不设图标，在代码中动态着色）
+        self.actionOpen.setIcon(self.set_icon_color(QIcon("ui/icon/folder.svg"), _ic))
+        self.actionRect.setIcon(self.set_icon_color(QIcon("ui/icon/rectangle.svg"), _ic))
+        self.actionPoly.setIcon(self.set_icon_color(QIcon("ui/icon/polygon.svg"), _ic))
+        self.actionPoint.setIcon(self.set_icon_color(QIcon("ui/icon/关键点.svg"), _ic))
+        self.actionRBox.setIcon(self.set_icon_color(QIcon("ui/icon/手机旋转1.svg"), _ic))
+
+        # 工具栏按钮图标着色
+        self.btnUndo.setIcon(self.set_icon_color(QIcon("ui/icon/arrow-u-up-left.svg"), _ic))
+        self.btnRedo.setIcon(self.set_icon_color(QIcon("ui/icon/arrow-u-up-right.svg"), _ic))
+        self.btnDelete.setIcon(self.set_icon_color(QIcon("ui/icon/trash.svg"), _ic))
+        self.btnSave.setIcon(self.set_icon_color(QIcon("ui/icon/floppy-disk.svg"), _ic))
+        self.btnKeyboard.setIcon(self.set_icon_color(QIcon("ui/icon/keyboard.svg"), _ic))
+
+        # SAM 图标
+        self.samIcon.setPixmap(
+            self.set_icon_color(QIcon("ui/icon/魔法-copy.svg"), _ic).pixmap(24, 24)
+        )
+        # 格式选择图标
+        self.formatWidget.btn.setIcon(self.set_icon_color(QIcon("ui/icon/格式.svg"), _ic))
+        # 数据集按钮图标
+        self.btnDatasetTool.setIcon(self.set_icon_color(QIcon("ui/icon/wrench.svg"), _ic))
+
+        # QToolButton 统一样式
+        for btn in [self.btnUndo, self.btnRedo, self.btnDelete, self.btnSave, self.btnKeyboard]:
+            btn.setStyleSheet(
+                "QToolButton { border: none; background: transparent; border-radius: 6px; }"
+                " QToolButton:hover { background-color: rgba(128, 128, 128, 0.2); }"
+            )
+
+        # QActionGroup：标注模式互斥
+        self.modeGroup = QActionGroup(self)
+        for act in [self.actionRect, self.actionPoly, self.actionPoint, self.actionRBox]:
+            act.setCheckable(True)
+            self.modeGroup.addAction(act)
+        self.actionRect.setChecked(True)
+
+        # _actionButtons：侧边栏折叠用
+        self._actionButtons = []
+        for action in [self.actionOpen, self.actionRect, self.actionPoly, self.actionPoint, self.actionRBox]:
+            btn = self.toolBar.widgetForAction(action)
+            if btn:
+                btn.setMinimumWidth(180)
+                btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+                self._actionButtons.append(btn)
+
+        # Logo 加载
+        logo_path = "ui/icon/logo.png"
+        if os.path.exists(logo_path):
+            pix = QPixmap(logo_path)
+            if not pix.isNull():
+                self.logoIcon.setPixmap(pix.scaled(28, 28, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+        # btnDrawMode / btnSmartMode 互斥
+        self.btnDrawMode.toggled.connect(
+            lambda checked: self.btnSmartMode.setChecked(not checked) if checked else None
+        )
+        self.btnSmartMode.toggled.connect(
+            lambda checked: self.btnDrawMode.setChecked(not checked) if checked else None
+        )
+
+        # 默认隐藏的控件
+        self.btnModelSelector.hide()
+        self.btnPredict.hide()
+        self.templateWidget.hide()
+        self.sepTemplate.hide()
+
+        # 坐标标签（statusBar 永久控件）
+        self.coordLabel = QLabel("坐标: X: 0, Y: 0")
+        self.statusBar.addPermanentWidget(self.coordLabel)
 
     def _init_pose_templates(self):
         templates = self.template_manager.get_template_names()

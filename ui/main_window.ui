@@ -15,122 +15,164 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="mainLayout">
-    <property name="spacing">0</property>
-    <property name="leftMargin">0</property>
-    <property name="topMargin">0</property>
-    <property name="rightMargin">0</property>
-    <property name="bottomMargin">0</property>
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
     <item>
      <widget class="QWidget" name="topBar">
-      <property name="fixedHeight">50</property>
+      <property name="fixedHeight">
+       <number>50</number>
+      </property>
+      <property name="objectName">
+       <string>topBar</string>
+      </property>
       <layout class="QHBoxLayout" name="topBarLayout">
-       <property name="leftMargin">10</property>
-       <property name="topMargin">0</property>
-       <property name="rightMargin">10</property>
-       <property name="bottomMargin">0</property>
-       <property name="spacing">8</property>
-       <item>
-        <widget class="QPushButton" name="btnCollapse">
-         <property name="font">
-          <font>
-           <family>Segoe UI</family>
-           <pointsize>16</pointsize>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>≡</string>
-         </property>
-         <property name="fixedSize">
-          <size>
-           <width>36</width>
-           <height>36</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="topBarSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btnAuthorInfo">
-         <property name="font">
-          <font>
-           <family>Segoe UI</family>
-           <pointsize>16</pointsize>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>ⓘ</string>
-         </property>
-         <property name="fixedSize">
-          <size>
-           <width>36</width>
-           <height>36</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btnThemeToggle">
-         <property name="font">
-          <font>
-           <family>Segoe UI</family>
-           <pointsize>16</pointsize>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>☀</string>
-         </property>
-         <property name="fixedSize">
-          <size>
-           <width>36</width>
-           <height>36</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
-     <widget class="QSplitter" name="contentSplitter">
+       <property name="spacing">
+        <number>8</number>
+       </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="btnCollapse">
+        <property name="font">
+         <font>
+          <family>Segoe UI</family>
+          <pointsize>16</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>≡</string>
+        </property>
+        <property name="fixedSize" stdset="0">
+         <size>
+          <width>36</width>
+          <height>36</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="topBarSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnAuthorInfo">
+        <property name="font">
+         <font>
+          <family>Segoe UI</family>
+          <pointsize>16</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>ⓘ</string>
+        </property>
+        <property name="fixedSize" stdset="0">
+         <size>
+          <width>36</width>
+          <height>36</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnThemeToggle">
+        <property name="font">
+         <font>
+          <family>Segoe UI</family>
+          <pointsize>16</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>☀</string>
+        </property>
+        <property name="fixedSize" stdset="0">
+         <size>
+          <width>36</width>
+          <height>36</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QSplitter" name="contentSplitter">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
       <widget class="QWidget" name="canvasArea">
        <layout class="QVBoxLayout" name="canvasLayout">
-        <property name="spacing">5</property>
-        <property name="leftMargin">0</property>
-        <property name="topMargin">5</property>
-        <property name="rightMargin">0</property>
-        <property name="bottomMargin">0</property>
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <layout class="QHBoxLayout" name="tb_layout_wrap">
-          <property name="spacing">0</property>
-          <property name="leftMargin">0</property>
-          <property name="topMargin">0</property>
-          <property name="rightMargin">0</property>
-          <property name="bottomMargin">0</property>
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
            <spacer name="tb_left_spacer">
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -141,145 +183,152 @@
            </spacer>
           </item>
           <item>
-           <widget class="QWidget" name="annotationToolbar">
-            <property name="fixedHeight">40</property>
-            <layout class="QHBoxLayout" name="tb_layout">
-             <property name="spacing">10</property>
-             <property name="leftMargin">10</property>
-             <property name="topMargin">0</property>
-             <property name="rightMargin">10</property>
-             <property name="bottomMargin">0</property>
-             <item>
-              <widget class="QPushButton" name="btnDrawMode">
-               <property name="text">
-                <string>✍ 手动标注</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btnSmartMode">
-               <property name="text">
-                <string>✨ 智能</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btnModelSelector">
-               <property name="text">
-                <string> SAM 3 ▾</string>
-               </property>
-               <property name="visible">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btnPredict">
-               <property name="text">
-                <string> 预测</string>
-               </property>
-               <property name="visible">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="sep1">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="TemplateSelectorWidget" name="templateWidget">
-               <property name="visible">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="sepTemplate">
-               <property name="text">
-                <string>|</string>
-               </property>
-               <property name="visible">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QToolButton" name="btnUndo">
-               <property name="fixedSize">
-                <size>
-                 <width>36</width>
-                 <height>36</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QToolButton" name="btnRedo">
-               <property name="fixedSize">
-                <size>
-                 <width>36</width>
-                 <height>36</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QToolButton" name="btnDelete">
-               <property name="fixedSize">
-                <size>
-                 <width>36</width>
-                 <height>36</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QToolButton" name="btnSave">
-               <property name="fixedSize">
-                <size>
-                 <width>36</width>
-                 <height>36</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="sep3">
-               <property name="text">
-                <string>|</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QToolButton" name="btnKeyboard">
-               <property name="fixedSize">
-                <size>
-                 <width>36</width>
-                 <height>36</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
+           <layout class="QHBoxLayout" name="tb_layout">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="btnDrawMode">
+              <property name="text">
+               <string>✍ 手动标注</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnSmartMode">
+              <property name="text">
+               <string>✨ 智能</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnModelSelector">
+              <property name="visible">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string> SAM 3 ▾</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnPredict">
+              <property name="visible">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string> 预测</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="sep1">
+              <property name="text">
+               <string>|</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="TemplateSelectorWidget" name="templateWidget" native="true">
+              <property name="visible">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="sepTemplate">
+              <property name="visible">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>|</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="btnUndo">
+              <property name="fixedSize" stdset="0">
+               <size>
+                <width>36</width>
+                <height>36</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="btnRedo">
+              <property name="fixedSize" stdset="0">
+               <size>
+                <width>36</width>
+                <height>36</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="btnDelete">
+              <property name="fixedSize" stdset="0">
+               <size>
+                <width>36</width>
+                <height>36</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="btnSave">
+              <property name="fixedSize" stdset="0">
+               <size>
+                <width>36</width>
+                <height>36</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="sep3">
+              <property name="text">
+               <string>|</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="btnKeyboard">
+              <property name="fixedSize" stdset="0">
+               <size>
+                <width>36</width>
+                <height>36</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <spacer name="tb_right_spacer">
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -293,65 +342,68 @@
         </item>
         <item>
          <widget class="CanvasView" name="view">
-          <property name="renderHints">
-           <set>QPainter::Antialiasing|QPainter::SmoothPixmapTransform</set>
-          </property>
-          <property name="transformationAnchor">
-           <enum>QGraphicsView::AnchorUnderMouse</enum>
-          </property>
-          <property name="resizeAnchor">
-           <enum>QGraphicsView::AnchorUnderMouse</enum>
+          <property name="verticalScrollBarPolicy">
+           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
           </property>
           <property name="horizontalScrollBarPolicy">
-           <enum>Qt::ScrollBarAlwaysOff</enum>
-          </property>
-          <property name="verticalScrollBarPolicy">
-           <enum>Qt::ScrollBarAlwaysOff</enum>
-          </property>
-          <property name="dragMode">
-           <enum>QGraphicsView::NoDrag</enum>
+           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
           </property>
           <property name="alignment">
-           <set>Qt::AlignCenter</set>
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+          <property name="renderHints">
+           <set>QPainter::RenderHint::Antialiasing|QPainter::RenderHint::SmoothPixmapTransform</set>
+          </property>
+          <property name="dragMode">
+           <enum>QGraphicsView::DragMode::NoDrag</enum>
+          </property>
+          <property name="transformationAnchor">
+           <enum>QGraphicsView::ViewportAnchor::AnchorUnderMouse</enum>
+          </property>
+          <property name="resizeAnchor">
+           <enum>QGraphicsView::ViewportAnchor::AnchorUnderMouse</enum>
           </property>
          </widget>
         </item>
        </layout>
       </widget>
       <widget class="QWidget" name="rightPanel">
-       <property name="minimumWidth">
-        <number>180</number>
-       </property>
-       <property name="maximumWidth">
-        <number>300</number>
-       </property>
        <layout class="QVBoxLayout" name="dockLayout">
-        <property name="spacing">6</property>
-        <property name="leftMargin">8</property>
-        <property name="topMargin">8</property>
-        <property name="rightMargin">8</property>
-        <property name="bottomMargin">8</property>
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <layout class="QHBoxLayout" name="rightTitleBar">
           <item>
            <widget class="QLabel" name="rightPanelTitle">
-            <property name="text">
-             <string>标注管理</string>
-            </property>
             <property name="font">
              <font>
               <family>Microsoft YaHei</family>
               <pointsize>10</pointsize>
-              <weight>75</weight>
               <bold>true</bold>
              </font>
+            </property>
+            <property name="text">
+             <string>标注管理</string>
             </property>
            </widget>
           </item>
           <item>
            <spacer name="rightTitleSpacer">
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -382,38 +434,46 @@
         </item>
         <item>
          <widget class="QListWidget" name="listFiles">
-          <property name="selectionMode">
-           <enum>QAbstractItemView::ExtendedSelection</enum>
-          </property>
           <property name="contextMenuPolicy">
-           <enum>Qt::CustomContextMenu</enum>
+           <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QWidget" name="samTextGroup">
-          <layout class="QVBoxLayout" name="textLayout">
-           <property name="spacing">8</property>
-           <property name="leftMargin">0</property>
-           <property name="topMargin">5</property>
-           <property name="rightMargin">0</property>
-           <property name="bottomMargin">15</property>
-           <item>
-            <widget class="QLineEdit" name="samPromptInput">
-             <property name="placeholderText">
-              <string>输入提示词提取 (如: dog)</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="samPromptBtn">
-             <property name="text">
-              <string>✨ 提交</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
+         <layout class="QVBoxLayout" name="textLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLineEdit" name="samPromptInput">
+            <property name="placeholderText">
+             <string>输入提示词提取 (如: dog)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="samPromptBtn">
+            <property name="text">
+             <string>✨ 提交</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -423,14 +483,11 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QToolBar" name="toolBar">
-   <property name="orientation">
-    <enum>Qt::Vertical</enum>
-   </property>
    <property name="movable">
     <bool>false</bool>
    </property>
-   <property name="fixedWidth">
-    <number>190</number>
+   <property name="orientation">
+    <enum>Qt::Orientation::Vertical</enum>
    </property>
    <property name="iconSize">
     <size>
@@ -439,7 +496,10 @@
     </size>
    </property>
    <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonTextBesideIcon</enum>
+    <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
+   </property>
+   <property name="fixedWidth" stdset="0">
+    <number>190</number>
    </property>
    <attribute name="toolBarArea">
     <enum>LeftToolBarArea</enum>
@@ -449,11 +509,21 @@
    </attribute>
    <widget class="QWidget" name="logoWidget">
     <layout class="QHBoxLayout" name="logoLayout">
-     <property name="spacing">5</property>
-     <property name="leftMargin">8</property>
-     <property name="topMargin">8</property>
-     <property name="rightMargin">4</property>
-     <property name="bottomMargin">8</property>
+     <property name="spacing">
+      <number>5</number>
+     </property>
+     <property name="leftMargin">
+      <number>8</number>
+     </property>
+     <property name="topMargin">
+      <number>8</number>
+     </property>
+     <property name="rightMargin">
+      <number>4</number>
+     </property>
+     <property name="bottomMargin">
+      <number>8</number>
+     </property>
      <item>
       <widget class="QLabel" name="logoIcon">
        <property name="fixedSize">
@@ -476,7 +546,6 @@
         <font>
          <family>Microsoft YaHei</family>
          <pointsize>11</pointsize>
-         <weight>75</weight>
          <bold>true</bold>
         </font>
        </property>
@@ -486,14 +555,7 @@
    </widget>
    <addaction name="actionOpen"/>
    <addaction name="separator"/>
-   <widget class="FormatSelectorWidget" name="formatWidget">
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-   </widget>
+   <widget class="FormatSelectorWidget" name="formatWidget"/>
    <addaction name="separator"/>
    <addaction name="actionRect"/>
    <addaction name="actionPoly"/>
@@ -501,20 +563,27 @@
    <addaction name="actionRBox"/>
    <addaction name="separator"/>
    <widget class="QWidget" name="samWidget">
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
     <layout class="QHBoxLayout" name="samOuterLayout">
-     <property name="spacing">10</property>
-     <property name="leftMargin">8</property>
-     <property name="topMargin">5</property>
-     <property name="rightMargin">4</property>
-     <property name="bottomMargin">5</property>
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <property name="leftMargin">
+      <number>8</number>
+     </property>
+     <property name="topMargin">
+      <number>5</number>
+     </property>
+     <property name="rightMargin">
+      <number>4</number>
+     </property>
+     <property name="bottomMargin">
+      <number>5</number>
+     </property>
      <item>
       <widget class="QLabel" name="samIcon">
+       <property name="toolTip">
+        <string>SAM 智能辅助</string>
+       </property>
        <property name="fixedSize">
         <size>
          <width>24</width>
@@ -528,12 +597,6 @@
      </item>
      <item>
       <widget class="SwitchControl" name="samSwitch">
-       <property name="fixedSize">
-        <size>
-         <width>50</width>
-         <height>26</height>
-        </size>
-       </property>
        <property name="toolTip">
         <string>开启/关闭 SAM 智能辅助</string>
        </property>
@@ -548,12 +611,6 @@
     </property>
     <property name="text">
      <string> 数据集处理</string>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
     </property>
    </widget>
   </widget>
@@ -575,7 +632,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-   <string>多边形标注 (P)</string>
+    <string>多边形标注 (P)</string>
    </property>
   </action>
   <action name="actionPoint">
@@ -602,12 +659,12 @@
    <header>ui.main_window</header>
   </customwidget>
   <customwidget>
-   <class>FormatSelectorWidget</class>
+   <class>TemplateSelectorWidget</class>
    <extends>QWidget</extends>
    <header>ui.main_window</header>
   </customwidget>
   <customwidget>
-   <class>TemplateSelectorWidget</class>
+   <class>FormatSelectorWidget</class>
    <extends>QWidget</extends>
    <header>ui.main_window</header>
   </customwidget>

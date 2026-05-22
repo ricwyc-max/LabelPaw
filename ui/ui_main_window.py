@@ -48,10 +48,12 @@ class Ui_MainWindow(object):
         self.mainLayout = QVBoxLayout(self.centralWidget)
         self.mainLayout.setSpacing(0)
         self.mainLayout.setObjectName(u"mainLayout")
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.topBar = QWidget(self.centralWidget)
         self.topBar.setObjectName(u"topBar")
+        self.topBar.setFixedHeight(50)
         self.topBarLayout = QHBoxLayout(self.topBar)
-        self.topBarLayout.setSpacing(0)
+        self.topBarLayout.setSpacing(8)
         self.topBarLayout.setObjectName(u"topBarLayout")
         self.topBarLayout.setContentsMargins(0, 0, 0, 0)
         self.btnCollapse = QPushButton(self.topBar)
@@ -61,7 +63,7 @@ class Ui_MainWindow(object):
         font.setPointSize(16)
         font.setBold(True)
         self.btnCollapse.setFont(font)
-        self.btnCollapse.setFixedSize(QSize(36, 36))
+        self.btnCollapse.setProperty("fixedSize", QSize(36, 36))
 
         self.topBarLayout.addWidget(self.btnCollapse)
 
@@ -72,14 +74,14 @@ class Ui_MainWindow(object):
         self.btnAuthorInfo = QPushButton(self.topBar)
         self.btnAuthorInfo.setObjectName(u"btnAuthorInfo")
         self.btnAuthorInfo.setFont(font)
-        self.btnAuthorInfo.setFixedSize(QSize(36, 36))
+        self.btnAuthorInfo.setProperty("fixedSize", QSize(36, 36))
 
         self.topBarLayout.addWidget(self.btnAuthorInfo)
 
         self.btnThemeToggle = QPushButton(self.topBar)
         self.btnThemeToggle.setObjectName(u"btnThemeToggle")
         self.btnThemeToggle.setFont(font)
-        self.btnThemeToggle.setFixedSize(QSize(36, 36))
+        self.btnThemeToggle.setProperty("fixedSize", QSize(36, 36))
 
         self.topBarLayout.addWidget(self.btnThemeToggle)
 
@@ -88,7 +90,7 @@ class Ui_MainWindow(object):
 
         self.contentSplitter = QSplitter(self.centralWidget)
         self.contentSplitter.setObjectName(u"contentSplitter")
-        self.contentSplitter.setOrientation(Qt.Horizontal)
+        self.contentSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.canvasArea = QWidget(self.contentSplitter)
         self.canvasArea.setObjectName(u"canvasArea")
         self.canvasLayout = QVBoxLayout(self.canvasArea)
@@ -98,95 +100,94 @@ class Ui_MainWindow(object):
         self.tb_layout_wrap = QHBoxLayout()
         self.tb_layout_wrap.setSpacing(0)
         self.tb_layout_wrap.setObjectName(u"tb_layout_wrap")
+        self.tb_layout_wrap.setContentsMargins(0, 0, 0, 0)
         self.tb_left_spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.tb_layout_wrap.addItem(self.tb_left_spacer)
 
-        self.annotationToolbar = QWidget(self.canvasArea)
-        self.annotationToolbar.setObjectName(u"annotationToolbar")
-        self.tb_layout = QHBoxLayout(self.annotationToolbar)
+        self.tb_layout = QHBoxLayout()
         self.tb_layout.setSpacing(0)
         self.tb_layout.setObjectName(u"tb_layout")
         self.tb_layout.setContentsMargins(0, 0, 0, 0)
-        self.btnDrawMode = QPushButton(self.annotationToolbar)
+        self.btnDrawMode = QPushButton(self.canvasArea)
         self.btnDrawMode.setObjectName(u"btnDrawMode")
         self.btnDrawMode.setCheckable(True)
         self.btnDrawMode.setChecked(True)
 
         self.tb_layout.addWidget(self.btnDrawMode)
 
-        self.btnSmartMode = QPushButton(self.annotationToolbar)
+        self.btnSmartMode = QPushButton(self.canvasArea)
         self.btnSmartMode.setObjectName(u"btnSmartMode")
         self.btnSmartMode.setCheckable(True)
 
         self.tb_layout.addWidget(self.btnSmartMode)
 
-        self.btnModelSelector = QPushButton(self.annotationToolbar)
+        self.btnModelSelector = QPushButton(self.canvasArea)
         self.btnModelSelector.setObjectName(u"btnModelSelector")
         self.btnModelSelector.setVisible(False)
 
         self.tb_layout.addWidget(self.btnModelSelector)
 
-        self.btnPredict = QPushButton(self.annotationToolbar)
+        self.btnPredict = QPushButton(self.canvasArea)
         self.btnPredict.setObjectName(u"btnPredict")
         self.btnPredict.setVisible(False)
 
         self.tb_layout.addWidget(self.btnPredict)
 
-        self.sep1 = QLabel(self.annotationToolbar)
+        self.sep1 = QLabel(self.canvasArea)
         self.sep1.setObjectName(u"sep1")
 
         self.tb_layout.addWidget(self.sep1)
 
-        self.templateWidget = TemplateSelectorWidget(self.annotationToolbar)
+        self.templateWidget = TemplateSelectorWidget(self.canvasArea)
         self.templateWidget.setObjectName(u"templateWidget")
         self.templateWidget.setVisible(False)
 
         self.tb_layout.addWidget(self.templateWidget)
 
-        self.sepTemplate = QLabel(self.annotationToolbar)
+        self.sepTemplate = QLabel(self.canvasArea)
         self.sepTemplate.setObjectName(u"sepTemplate")
         self.sepTemplate.setVisible(False)
 
         self.tb_layout.addWidget(self.sepTemplate)
 
-        self.btnUndo = QToolButton(self.annotationToolbar)
+        self.btnUndo = QToolButton(self.canvasArea)
         self.btnUndo.setObjectName(u"btnUndo")
-        self.btnUndo.setFixedSize(QSize(36, 36))
+        self.btnUndo.setProperty("fixedSize", QSize(36, 36))
 
         self.tb_layout.addWidget(self.btnUndo)
 
-        self.btnRedo = QToolButton(self.annotationToolbar)
+        self.btnRedo = QToolButton(self.canvasArea)
         self.btnRedo.setObjectName(u"btnRedo")
-        self.btnRedo.setFixedSize(QSize(36, 36))
+        self.btnRedo.setProperty("fixedSize", QSize(36, 36))
 
         self.tb_layout.addWidget(self.btnRedo)
 
-        self.btnDelete = QToolButton(self.annotationToolbar)
+        self.btnDelete = QToolButton(self.canvasArea)
         self.btnDelete.setObjectName(u"btnDelete")
-        self.btnDelete.setFixedSize(QSize(36, 36))
+        self.btnDelete.setProperty("fixedSize", QSize(36, 36))
 
         self.tb_layout.addWidget(self.btnDelete)
 
-        self.btnSave = QToolButton(self.annotationToolbar)
+        self.btnSave = QToolButton(self.canvasArea)
         self.btnSave.setObjectName(u"btnSave")
-        self.btnSave.setFixedSize(QSize(36, 36))
+        self.btnSave.setProperty("fixedSize", QSize(36, 36))
 
         self.tb_layout.addWidget(self.btnSave)
 
-        self.sep3 = QLabel(self.annotationToolbar)
+        self.sep3 = QLabel(self.canvasArea)
         self.sep3.setObjectName(u"sep3")
 
         self.tb_layout.addWidget(self.sep3)
 
-        self.btnKeyboard = QToolButton(self.annotationToolbar)
+        self.btnKeyboard = QToolButton(self.canvasArea)
         self.btnKeyboard.setObjectName(u"btnKeyboard")
-        self.btnKeyboard.setFixedSize(QSize(36, 36))
+        self.btnKeyboard.setProperty("fixedSize", QSize(36, 36))
 
         self.tb_layout.addWidget(self.btnKeyboard)
 
 
-        self.tb_layout_wrap.addWidget(self.annotationToolbar)
+        self.tb_layout_wrap.addLayout(self.tb_layout)
 
         self.tb_right_spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
@@ -197,21 +198,19 @@ class Ui_MainWindow(object):
 
         self.view = CanvasView(self.canvasArea)
         self.view.setObjectName(u"view")
-        self.view.setRenderHints(QPainter.Antialiasing|QPainter.SmoothPixmapTransform)
-        self.view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        self.view.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
-        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.view.setDragMode(QGraphicsView.NoDrag)
-        self.view.setAlignment(Qt.AlignCenter)
+        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.view.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.view.setRenderHints(QPainter.RenderHint.Antialiasing|QPainter.RenderHint.SmoothPixmapTransform)
+        self.view.setDragMode(QGraphicsView.DragMode.NoDrag)
+        self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.view.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
 
         self.canvasLayout.addWidget(self.view)
 
         self.contentSplitter.addWidget(self.canvasArea)
         self.rightPanel = QWidget(self.contentSplitter)
         self.rightPanel.setObjectName(u"rightPanel")
-        self.rightPanel.setMinimumWidth(180)
-        self.rightPanel.setMaximumWidth(300)
         self.dockLayout = QVBoxLayout(self.rightPanel)
         self.dockLayout.setSpacing(0)
         self.dockLayout.setObjectName(u"dockLayout")
@@ -252,29 +251,27 @@ class Ui_MainWindow(object):
 
         self.listFiles = QListWidget(self.rightPanel)
         self.listFiles.setObjectName(u"listFiles")
-        self.listFiles.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.listFiles.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.listFiles.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.listFiles.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         self.dockLayout.addWidget(self.listFiles)
 
-        self.samTextGroup = QWidget(self.rightPanel)
-        self.samTextGroup.setObjectName(u"samTextGroup")
-        self.textLayout = QVBoxLayout(self.samTextGroup)
+        self.textLayout = QVBoxLayout()
         self.textLayout.setSpacing(0)
         self.textLayout.setObjectName(u"textLayout")
         self.textLayout.setContentsMargins(0, 0, 0, 0)
-        self.samPromptInput = QLineEdit(self.samTextGroup)
+        self.samPromptInput = QLineEdit(self.rightPanel)
         self.samPromptInput.setObjectName(u"samPromptInput")
 
         self.textLayout.addWidget(self.samPromptInput)
 
-        self.samPromptBtn = QPushButton(self.samTextGroup)
+        self.samPromptBtn = QPushButton(self.rightPanel)
         self.samPromptBtn.setObjectName(u"samPromptBtn")
 
         self.textLayout.addWidget(self.samPromptBtn)
 
 
-        self.dockLayout.addWidget(self.samTextGroup)
+        self.dockLayout.addLayout(self.textLayout)
 
         self.contentSplitter.addWidget(self.rightPanel)
 
@@ -286,17 +283,17 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
         self.toolBar = QToolBar(MainWindow)
         self.toolBar.setObjectName(u"toolBar")
-        self.toolBar.setOrientation(Qt.Vertical)
         self.toolBar.setMovable(False)
-        self.toolBar.setFixedWidth(190)
+        self.toolBar.setOrientation(Qt.Orientation.Vertical)
         self.toolBar.setIconSize(QSize(24, 24))
-        self.toolBar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.toolBar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.toolBar.setProperty("fixedWidth", 190)
         self.logoWidget = QWidget(self.toolBar)
         self.logoWidget.setObjectName(u"logoWidget")
         self.logoLayout = QHBoxLayout(self.logoWidget)
-        self.logoLayout.setSpacing(0)
+        self.logoLayout.setSpacing(5)
         self.logoLayout.setObjectName(u"logoLayout")
-        self.logoLayout.setContentsMargins(0, 0, 0, 0)
+        self.logoLayout.setContentsMargins(8, 8, 4, 8)
         self.logoIcon = QLabel(self.logoWidget)
         self.logoIcon.setObjectName(u"logoIcon")
         self.logoIcon.setFixedSize(QSize(28, 28))
@@ -317,20 +314,13 @@ class Ui_MainWindow(object):
         self.toolBar.addWidget(self.logoWidget)
         self.formatWidget = FormatSelectorWidget(self.toolBar)
         self.formatWidget.setObjectName(u"formatWidget")
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.formatWidget.sizePolicy().hasHeightForWidth())
-        self.formatWidget.setSizePolicy(sizePolicy)
         self.toolBar.addWidget(self.formatWidget)
         self.samWidget = QWidget(self.toolBar)
         self.samWidget.setObjectName(u"samWidget")
-        sizePolicy.setHeightForWidth(self.samWidget.sizePolicy().hasHeightForWidth())
-        self.samWidget.setSizePolicy(sizePolicy)
         self.samOuterLayout = QHBoxLayout(self.samWidget)
-        self.samOuterLayout.setSpacing(0)
+        self.samOuterLayout.setSpacing(10)
         self.samOuterLayout.setObjectName(u"samOuterLayout")
-        self.samOuterLayout.setContentsMargins(0, 0, 0, 0)
+        self.samOuterLayout.setContentsMargins(8, 5, 4, 5)
         self.samIcon = QLabel(self.samWidget)
         self.samIcon.setObjectName(u"samIcon")
         self.samIcon.setFixedSize(QSize(24, 24))
@@ -340,15 +330,12 @@ class Ui_MainWindow(object):
 
         self.samSwitch = SwitchControl(self.samWidget)
         self.samSwitch.setObjectName(u"samSwitch")
-        self.samSwitch.setFixedSize(QSize(50, 26))
 
         self.samOuterLayout.addWidget(self.samSwitch)
 
         self.toolBar.addWidget(self.samWidget)
         self.btnDatasetTool = QPushButton(self.toolBar)
         self.btnDatasetTool.setObjectName(u"btnDatasetTool")
-        sizePolicy.setHeightForWidth(self.btnDatasetTool.sizePolicy().hasHeightForWidth())
-        self.btnDatasetTool.setSizePolicy(sizePolicy)
         self.toolBar.addWidget(self.btnDatasetTool)
         MainWindow.addToolBar(Qt.LeftToolBarArea, self.toolBar)
 
@@ -374,6 +361,7 @@ class Ui_MainWindow(object):
         self.actionPoly.setText(QCoreApplication.translate("MainWindow", u"\u591a\u8fb9\u5f62\u6807\u6ce8 (P)", None))
         self.actionPoint.setText(QCoreApplication.translate("MainWindow", u"\u5173\u952e\u70b9\u6807\u6ce8 (T)", None))
         self.actionRBox.setText(QCoreApplication.translate("MainWindow", u"\u65cb\u8f6c\u6846\u6807\u6ce8 (O)", None))
+        self.topBar.setObjectName(QCoreApplication.translate("MainWindow", u"topBar", None))
         self.btnCollapse.setText(QCoreApplication.translate("MainWindow", u"\u2261", None))
         self.btnAuthorInfo.setText(QCoreApplication.translate("MainWindow", u"\u24d8", None))
         self.btnThemeToggle.setText(QCoreApplication.translate("MainWindow", u"\u2600", None))
@@ -390,6 +378,9 @@ class Ui_MainWindow(object):
         self.samPromptInput.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u8f93\u5165\u63d0\u793a\u8bcd\u63d0\u53d6 (\u5982: dog)", None))
         self.samPromptBtn.setText(QCoreApplication.translate("MainWindow", u"\u2728 \u63d0\u4ea4", None))
         self.logoLabel.setText(QCoreApplication.translate("MainWindow", u"LabelPaw", None))
+#if QT_CONFIG(tooltip)
+        self.samIcon.setToolTip(QCoreApplication.translate("MainWindow", u"SAM \u667a\u80fd\u8f85\u52a9", None))
+#endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
         self.samSwitch.setToolTip(QCoreApplication.translate("MainWindow", u"\u5f00\u542f/\u5173\u95ed SAM \u667a\u80fd\u8f85\u52a9", None))
 #endif // QT_CONFIG(tooltip)

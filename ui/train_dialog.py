@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+from datetime import datetime
 
 # 在主线程中预导入 ultralytics，避免 QThread 栈空间不足导致 0xC00000FD
 try:
@@ -140,7 +141,6 @@ class TrainWorker(QObject):
     def _make_train_script(self):
         """生成训练用的 Python 脚本内容。"""
         return f'''import sys, os, re, shutil
-from datetime import datetime
 sys.stdout = sys.stderr  # 合并输出流便于捕获
 from ultralytics import YOLO
 
@@ -167,11 +167,10 @@ if not os.path.exists(model_path):
 else:
     model = YOLO(model_path)
 
-ts = datetime.now().strftime("%m%d_%H%M")
 results = model.train(
     data={self.data_yaml_path!r},
     project=os.path.join(weights_dir, "train"),
-    name=ts,
+    name={self.params["exp_name"]!r},
     epochs={self.params["epochs"]},
     batch={self.params["batch"]},
     imgsz={self.params["imgsz"]},
@@ -300,6 +299,14 @@ class TrainDialog(QDialog):
         model_layout.addRow("预训练模型:", self.model_combo)
 
         layout.addWidget(model_group)
+
+        # ── 实验命名 ──
+        name_group = QGroupBox("实验命名")
+        name_layout = QFormLayout(name_group)
+        self.exp_name = QLineEdit()
+        self.exp_name.setPlaceholderText("留空自动使用时间戳")
+        name_layout.addRow("实验名称:", self.exp_name)
+        layout.addWidget(name_group)
 
         # ── 训练参数 ──
         param_group = QGroupBox("训练参数")
@@ -435,7 +442,9 @@ class TrainDialog(QDialog):
             # 预置模型名（如 yolov8n.pt）会被 YOLO 自动下载
             pass
 
+        exp_name = self.exp_name.text().strip() or datetime.now().strftime("%m%d_%H%M")
         params = {
+            "exp_name": exp_name,
             "epochs": self.spin_epochs.value(),
             "batch": self.spin_batch.value(),
             "imgsz": self.spin_imgsz.value(),

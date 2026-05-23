@@ -155,72 +155,67 @@ sys.stdout = sys.stderr
 import torch.multiprocessing as _mp
 _mp.freeze_support()
 
-def main():
+if __name__ == '__main__':
     from ultralytics import YOLO
+    import torch as _torch
 
     model_name = os.path.basename(__pretrained__)
-weights_dir = __save_path__
-os.makedirs(weights_dir, exist_ok=True)
-model_path = os.path.join(weights_dir, model_name)
+    weights_dir = __save_path__
+    os.makedirs(weights_dir, exist_ok=True)
+    model_path = os.path.join(weights_dir, model_name)
 
-# 校验并清理损坏的模型文件
-for fpath in (model_path, model_name):
-    if os.path.exists(fpath):
-        try:
-            with zipfile.ZipFile(fpath) as _zf:
-                pass
-        except zipfile.BadZipFile:
-            deleted = False
-            for _ in range(5):
-                try:
-                    os.remove(fpath)
-                    print("检测到损坏的模型文件，已删除")
-                    deleted = True
-                    break
-                except PermissionError:
-                    time.sleep(1)
-            if not deleted:
-                alt = fpath + "." + str(uuid.uuid4()) + ".bak"
-                try:
-                    shutil.move(fpath, alt)
-                    print(f"损坏的模型文件被占用，已重命名为 {alt}")
-                except Exception as e:
-                    print(f"无法处理损坏的模型文件: {e}")
+    for fpath in (model_path, model_name):
+        if os.path.exists(fpath):
+            try:
+                with zipfile.ZipFile(fpath) as _zf:
+                    pass
+            except zipfile.BadZipFile:
+                deleted = False
+                for _ in range(5):
+                    try:
+                        os.remove(fpath)
+                        print("检测到损坏的模型文件，已删除")
+                        deleted = True
+                        break
+                    except PermissionError:
+                        time.sleep(1)
+                if not deleted:
+                    alt = fpath + "." + str(uuid.uuid4()) + ".bak"
+                    try:
+                        shutil.move(fpath, alt)
+                        print(f"损坏的模型文件被占用，已重命名为 {alt}")
+                    except Exception as e:
+                        print(f"无法处理损坏的模型文件: {e}")
 
-if not os.path.exists(model_path):
-    model = YOLO(__pretrained__)
-    if os.path.exists(model_name):
-        shutil.move(model_name, model_path)
-else:
-    model = YOLO(model_path)
+    if not os.path.exists(model_path):
+        model = YOLO(__pretrained__)
+        if os.path.exists(model_name):
+            shutil.move(model_name, model_path)
+    else:
+        model = YOLO(model_path)
 
-# 自动检测 CUDA，不可用时回退 CPU
-import torch as _torch
-_device = __device__
-if _device != "cpu" and (_torch.cuda.device_count() == 0 or not _torch.cuda.is_available()):
-    _device = "cpu"
-    print("CUDA 不可用，自动切换至 CPU 训练")
+    _device = __device__
+    if _device != "cpu" and (_torch.cuda.device_count() == 0 or not _torch.cuda.is_available()):
+        _device = "cpu"
+        print("CUDA 不可用，自动切换至 CPU 训练")
 
-results = model.train(
-    data=__data_yaml__,
-    project=os.path.join(__save_path__, "train"),
-    name=__exp_name__,
-    epochs=__epochs__, batch=__batch__, imgsz=__imgsz__,
-    device=_device, workers=__workers__, lr0=__lr0__,
-    patience=__patience__, verbose=True,
-)
-print("__TRAIN_DONE__")
-metrics = model.val()
-print(f"__METRICS__ mAP50={metrics.box.map50:.4f} mAP50-95={metrics.box.map:.4f}")
-save_dir = getattr(model.trainer, 'save_dir', '') if hasattr(model, 'trainer') else ''
-if save_dir:
-    best = os.path.join(save_dir, "weights", "best.pt")
-    if os.path.exists(best):
-        print(f"__BEST__{best}")
-print("__ALL_DONE__")
-
-if __name__ == '__main__':
-    main()
+    results = model.train(
+        data=__data_yaml__,
+        project=os.path.join(__save_path__, "train"),
+        name=__exp_name__,
+        epochs=__epochs__, batch=__batch__, imgsz=__imgsz__,
+        device=_device, workers=__workers__, lr0=__lr0__,
+        patience=__patience__, verbose=True,
+    )
+    print("__TRAIN_DONE__")
+    metrics = model.val()
+    print(f"__METRICS__ mAP50={metrics.box.map50:.4f} mAP50-95={metrics.box.map:.4f}")
+    save_dir = getattr(model.trainer, 'save_dir', '') if hasattr(model, 'trainer') else ''
+    if save_dir:
+        best = os.path.join(save_dir, "weights", "best.pt")
+        if os.path.exists(best):
+            print(f"__BEST__{best}")
+    print("__ALL_DONE__")
 """.replace("__pretrained__", repr(self.pretrained_path)) \
  .replace("__save_path__", repr(p["save_path"])) \
  .replace("__data_yaml__", repr(self.data_yaml_path)) \

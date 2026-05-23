@@ -149,6 +149,17 @@ model_name = os.path.basename({self.pretrained_path!r})
 weights_dir = os.path.join(os.path.dirname({self.data_yaml_path!r}), "..", "weights")
 os.makedirs(weights_dir, exist_ok=True)
 model_path = os.path.join(weights_dir, model_name)
+
+# 如果模型文件损坏（下载中断），自动删除重新下载
+if os.path.exists(model_path):
+    try:
+        import zipfile
+        with zipfile.ZipFile(model_path) as _zf:
+            pass
+    except zipfile.BadZipFile:
+        os.remove(model_path)
+        print(f"检测到损坏的模型文件 {model_name}，自动删除重新下载...\n")
+
 if not os.path.exists(model_path):
     model = YOLO({self.pretrained_path!r})
     if os.path.exists(model_name):

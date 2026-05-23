@@ -376,7 +376,8 @@ class TrainDialog(QDialog):
 
         self.spin_workers = QSpinBox()
         self.spin_workers.setRange(0, 64)
-        self.spin_workers.setValue(8)
+        self.spin_workers.setValue(2)
+        self.spin_workers.setToolTip("Windows 建议设为 0 或 2，过高会导致页面文件不足")
 
         self.spin_lr0 = QDoubleSpinBox()
         self.spin_lr0.setRange(0.0001, 1.0)

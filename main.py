@@ -10,6 +10,13 @@ try:
     import triton
 except ImportError:
     pass
+from PySide6.QtCore import qInstallMessageHandler
+# 过滤 Qt Windows 平台插件的无害警告（DialogOver 透明窗口）
+def _qt_msg_handler(mode, context, msg):
+    if "UpdateLayeredWindowIndirect" not in msg:
+        print(msg, file=sys.stderr)
+
+qInstallMessageHandler(_qt_msg_handler)
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QInputDialog, QMessageBox, QLabel, QListWidgetItem, QDialog, QMenu, QAbstractItemView
 from PySide6.QtCore import Qt, QPointF, QRectF
 from PySide6.QtGui import QPainter, QIcon, QPixmap, QColor, QAction, QActionGroup, QPolygonF, QMovie

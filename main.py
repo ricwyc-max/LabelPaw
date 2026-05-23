@@ -3,6 +3,8 @@ import os
 import json
 # 屏蔽 Qt 在 Windows 上透明窗口渲染的无害警告
 os.environ["QT_LOGGING_RULES"] = "qt.core.qwindow.warning=false"
+# 将 ui/ 目录加入路径（resources_rc 由 pyside6-rcc 编译生成，供 .ui 生成的代码引用）
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "ui"))
 # triton 必须在 PySide6 之前导入，避免 DLL 搜索路径冲突导致 libtriton 加载失败
 try:
     import triton

@@ -144,9 +144,9 @@ class TrainWorker(QObject):
 sys.stdout = sys.stderr  # 合并输出流便于捕获
 from ultralytics import YOLO
 
-# 模型下载到数据集同级的 weights/ 目录
+# 模型下载到指定目录
 model_name = os.path.basename({self.pretrained_path!r})
-weights_dir = os.path.join(os.path.dirname({self.data_yaml_path!r}), "..", "weights")
+weights_dir = {self.params["save_path"]!r}
 os.makedirs(weights_dir, exist_ok=True)
 model_path = os.path.join(weights_dir, model_name)
 
@@ -188,7 +188,7 @@ else:
 
 results = model.train(
     data={self.data_yaml_path!r},
-    project=os.path.join(weights_dir, "train"),
+    project=os.path.join({self.params["save_path"]!r}, "train"),
     name={self.params["exp_name"]!r},
     epochs={self.params["epochs"]},
     batch={self.params["batch"]},
@@ -298,6 +298,20 @@ class TrainDialog(QDialog):
         ds_layout.addWidget(self.ds_info)
         layout.addWidget(ds_group)
 
+        # ── 模型保存位置 ──
+        save_group = QGroupBox("模型保存位置")
+        save_layout = QVBoxLayout(save_group)
+        save_row = QHBoxLayout()
+        default_weights = os.path.join(find_project_root(), "weights")
+        self.save_path = QLineEdit(default_weights)
+        self.save_path.setPlaceholderText("模型文件下载和训练输出目录...")
+        btn_save_browse = QPushButton("浏览")
+        btn_save_browse.clicked.connect(self._browse_save_path)
+        save_row.addWidget(self.save_path, 1)
+        save_row.addWidget(btn_save_browse)
+        save_layout.addLayout(save_row)
+        layout.addWidget(save_group)
+
         # ── 基础模型 ──
         model_group = QGroupBox("基础模型")
         model_layout = QFormLayout(model_group)
@@ -396,6 +410,12 @@ class TrainDialog(QDialog):
             for path, label in custom:
                 self.model_combo.addItem(f"[自定义] {label}", path)
 
+    def _browse_save_path(self):
+        """选择模型保存目录。"""
+        dir_path = QFileDialog.getExistingDirectory(self, "选择模型保存目录")
+        if dir_path:
+            self.save_path.setText(dir_path)
+
     def _browse_dataset(self):
         """选择数据集目录。"""
         dir_path = QFileDialog.getExistingDirectory(self, "选择数据集目录")
@@ -450,8 +470,12 @@ class TrainDialog(QDialog):
             pass
 
         exp_name = self.exp_name.text().strip() or datetime.now().strftime("%m%d_%H%M")
+        save_path = self.save_path.text().strip()
+        if not save_path:
+            save_path = os.path.join(find_project_root(), "weights")
         params = {
             "exp_name": exp_name,
+            "save_path": save_path,
             "epochs": self.spin_epochs.value(),
             "batch": self.spin_batch.value(),
             "imgsz": self.spin_imgsz.value(),
@@ -507,8 +531,10 @@ class TrainDialog(QDialog):
 
     def _open_train_dir(self):
         """打开 YOLO 训练输出目录。"""
-        root = find_project_root()
-        train_dir = os.path.join(root, "runs", "train")
+        save_path = self.save_path.text().strip()
+        if not save_path:
+            save_path = os.path.join(find_project_root(), "weights")
+        train_dir = os.path.join(save_path, "train")
         if os.path.exists(train_dir):
             os.startfile(train_dir)
         else:

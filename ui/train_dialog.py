@@ -363,8 +363,19 @@ class TrainDialog(QDialog):
         self.spin_patience.setSpecialValueText("关闭")
 
         self.combo_device = QComboBox()
-        self.combo_device.addItems(["cuda0", "cuda", "cpu", "0", "1"])
-        self.combo_device.setCurrentText("cuda0")
+        # 自动检测可用设备
+        try:
+            import torch
+            has_cuda = torch.cuda.is_available()
+        except ImportError:
+            has_cuda = False
+        if has_cuda:
+            device_count = torch.cuda.device_count()
+            self.combo_device.addItems([f"cuda{i}" for i in range(device_count)] + ["cpu"])
+            self.combo_device.setCurrentText("cuda0" if device_count > 0 else "cpu")
+        else:
+            self.combo_device.addItems(["cpu"])
+            self.combo_device.setCurrentText("cpu")
 
         param_layout.addRow("训练轮数:", self.spin_epochs)
         param_layout.addRow("批量大小:", self.spin_batch)

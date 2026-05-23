@@ -140,7 +140,7 @@ class TrainWorker(QObject):
 
     def _make_train_script(self):
         """生成训练用的 Python 脚本内容。"""
-        return f'''import sys, os, re, shutil, zipfile, time
+        return f'''import sys, os, re, shutil, zipfile, time, uuid
 sys.stdout = sys.stderr  # 合并输出流便于捕获
 from ultralytics import YOLO
 
@@ -156,13 +156,22 @@ if os.path.exists(model_path):
         with zipfile.ZipFile(model_path) as _zf:
             pass
     except zipfile.BadZipFile:
+        deleted = False
         for _ in range(5):
             try:
                 os.remove(model_path)
                 print("检测到损坏的模型文件，自动删除重新下载...")
+                deleted = True
                 break
             except PermissionError:
                 time.sleep(1)
+        if not deleted:
+            alt = model_path + "." + str(uuid.uuid4()) + ".bak"
+            try:
+                shutil.move(model_path, alt)
+                print(f"损坏的模型文件被占用，已重命名为 {alt}")
+            except Exception as e:
+                print(f"无法处理损坏的模型文件: {e}")
 
 # 也检查工作目录中可能存在的损坏文件
 if os.path.exists(model_name):
@@ -171,13 +180,23 @@ if os.path.exists(model_name):
             pass
     except zipfile.BadZipFile:
         # 多试几次删除（可能被杀软或前一进程锁定）
+        deleted = False
         for _ in range(5):
             try:
                 os.remove(model_name)
                 print("检测到损坏的模型文件，已删除")
+                deleted = True
                 break
             except PermissionError:
                 time.sleep(1)
+        if not deleted:
+            # 删不掉就改名，避免阻塞后续下载
+            alt = model_name + "." + str(uuid.uuid4()) + ".bak"
+            try:
+                shutil.move(model_name, alt)
+                print(f"损坏的模型文件被占用，已重命名为 {alt}")
+            except Exception as e:
+                print(f"无法处理损坏的模型文件: {e}")
 
 if not os.path.exists(model_path):
     model = YOLO({self.pretrained_path!r})

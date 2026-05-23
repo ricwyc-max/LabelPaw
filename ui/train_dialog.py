@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout,
     QLineEdit, QPushButton, QComboBox, QSpinBox, QDoubleSpinBox,
     QLabel, QTextEdit, QProgressBar, QMessageBox, QFileDialog,
-    QCheckBox, QWidget
+    QCheckBox, QWidget, QSizePolicy
 )
 from PySide6.QtCore import Qt, QObject, QProcess, Signal
 from PySide6.QtGui import QIcon, QTextCursor
@@ -44,17 +44,25 @@ def find_project_root():
 
 
 def scan_custom_weights():
-    """扫描 weights/ 下所有 YOLO 权重文件。"""
+    """扫描本地已有模型文件用于迁移学习。"""
     root = find_project_root()
     weights_dir = os.path.join(root, "weights")
     custom = []
     if os.path.exists(weights_dir):
+        # 扫描 yolo*_weights/ 目录下的原始权重
         for folder in sorted(os.listdir(weights_dir)):
             folder_path = os.path.join(weights_dir, folder)
             if os.path.isdir(folder_path) and folder.startswith("yolo"):
                 for f in os.listdir(folder_path):
                     if f.endswith(".pt"):
                         custom.append((os.path.join(folder_path, f), f"{folder}/{f}"))
+        # 扫描训练输出 results/train/*/weights/best.pt 用于迁移学习
+        train_dir = os.path.join(weights_dir, "train")
+        if os.path.exists(train_dir):
+            for exp in sorted(os.listdir(train_dir)):
+                best = os.path.join(train_dir, exp, "weights", "best.pt")
+                if os.path.exists(best):
+                    custom.append((best, f"[已训练] {exp}"))
     return custom
 
 
@@ -317,8 +325,18 @@ class TrainDialog(QDialog):
         model_group = QGroupBox("基础模型")
         model_layout = QFormLayout(model_group)
 
+        model_row = QHBoxLayout()
         self.model_combo = QComboBox()
-        model_layout.addRow("预训练模型:", self.model_combo)
+        self.model_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        btn_browse_model = QPushButton("浏览本地模型")
+        btn_browse_model.clicked.connect(self._browse_model_file)
+        model_row.addWidget(self.model_combo, 1)
+        model_row.addWidget(btn_browse_model)
+        model_layout.addRow("预训练模型:", model_row)
+
+        self.model_file_label = QLabel("")
+        self.model_file_label.setWordWrap(True)
+        model_layout.addRow("", self.model_file_label)
 
         layout.addWidget(model_group)
 
@@ -412,21 +430,30 @@ class TrainDialog(QDialog):
         layout.addWidget(self.progress_bar)
 
     def _load_preset_models(self):
-        """加载预置模型和自定义权重到下拉框。"""
+        """加载预置模型和本地已有模型到下拉框。"""
         for filename, label in PRESET_MODELS:
-            self.model_combo.addItem(f"{label} ({filename})", filename)
-        # 扫描自定义权重
+            self.model_combo.addItem(f"⬇ {label} ({filename})", filename)
+        # 扫描本地已有模型（迁移学习）
         custom = scan_custom_weights()
         if custom:
             self.model_combo.insertSeparator(self.model_combo.count())
-            for path, label in custom:
-                self.model_combo.addItem(f"[自定义] {label}", path)
+            for path, desc in custom:
+                self.model_combo.addItem(f"📁 {desc}", path)
 
     def _browse_save_path(self):
         """选择模型保存目录。"""
         dir_path = QFileDialog.getExistingDirectory(self, "选择模型保存目录")
         if dir_path:
             self.save_path.setText(dir_path)
+
+    def _browse_model_file(self):
+        """选择本地 .pt 模型文件用于迁移学习。"""
+        path, _ = QFileDialog.getOpenFileName(
+            self, "选择模型文件", "", "PyTorch 模型 (*.pt *.pth);;所有文件 (*)")
+        if path:
+            self.model_combo.insertItem(0, f"[本地] {os.path.basename(path)}", path)
+            self.model_combo.setCurrentIndex(0)
+            self.model_file_label.setText(f"使用本地模型: {os.path.basename(path)}")
 
     def _browse_dataset(self):
         """选择数据集目录。"""

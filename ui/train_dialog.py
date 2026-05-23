@@ -140,7 +140,14 @@ class TrainWorker(QObject):
         self.process.setProcessChannelMode(QProcess.MergedChannels)
         self.process.readyReadStandardOutput.connect(self._on_stdout)
         self.process.finished.connect(lambda: self._on_finished(script_path))
-        # 设置工作目录为项目根目录，使 YOLO 模型下载/保存路径一致
+        # 显式传递当前进程的环境变量（确保 CUDA_PATH 等被子进程继承）
+        from PySide6.QtCore import QProcessEnvironment
+        env = QProcessEnvironment.systemEnvironment()
+        for k, v in os.environ.items():
+            if k.startswith("CUDA") or "CUDA" in k.upper():
+                env.insert(k, v)
+        self.process.setProcessEnvironment(env)
+        # 设置工作目录为项目根目录
         self.process.setWorkingDirectory(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
         python = sys.executable

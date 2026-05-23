@@ -3,6 +3,14 @@
 import os
 import re
 import sys
+
+# 在主线程中预导入 ultralytics，避免 QThread 栈空间不足导致 0xC00000FD
+try:
+    from ultralytics import YOLO
+    _ULTRA_AVAILABLE = True
+except ImportError:
+    _ULTRA_AVAILABLE = False
+
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout,
     QLineEdit, QPushButton, QComboBox, QSpinBox, QDoubleSpinBox,
@@ -134,7 +142,10 @@ class TrainWorker(QThread):
         sys.stderr = self
 
         try:
-            from ultralytics import YOLO
+            if not _ULTRA_AVAILABLE:
+                self.log_signal.emit("错误: ultralytics 未安装，请执行 pip install ultralytics\n")
+                self.finished_signal.emit(False, "ultralytics 未安装")
+                return
 
             self.log_signal.emit(f"加载预训练模型: {self.pretrained_path}\n")
             model = YOLO(self.pretrained_path)

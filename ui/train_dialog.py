@@ -190,12 +190,19 @@ if not os.path.exists(model_path):
 else:
     model = YOLO(model_path)
 
+# 自动检测 CUDA，不可用时回退 CPU
+import torch as _torch
+_device = __device__
+if _device != "cpu" and not _torch.cuda.is_available():
+    _device = "cpu"
+    print("CUDA 不可用，自动切换至 CPU 训练\n")
+
 results = model.train(
     data=__data_yaml__,
     project=os.path.join(__save_path__, "train"),
     name=__exp_name__,
     epochs=__epochs__, batch=__batch__, imgsz=__imgsz__,
-    device=__device__, workers=__workers__, lr0=__lr0__,
+    device=_device, workers=__workers__, lr0=__lr0__,
     patience=__patience__, verbose=True,
 )
 print("__TRAIN_DONE__")

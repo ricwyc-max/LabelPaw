@@ -625,6 +625,14 @@ QStatusBar { background-color: #0F172A; border-top: 1px solid #1E293B; color: #9
      <string> 数据集处理</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="btnTrain">
+    <property name="toolTip">
+     <string>YOLO 模型训练</string>
+    </property>
+    <property name="text">
+     <string> 模型训练</string>
+    </property>
+   </widget>
   </widget>
   <action name="actionOpen">
    <property name="text">

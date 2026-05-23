@@ -28,6 +28,7 @@ except ImportError:
 from ui.ui_main_window import Ui_MainWindow
 from ui.main_window import TemplateSelectorWidget, FormatSelectorWidget
 from ui.template_dialog import SkeletonTemplateDialog
+from ui.train_dialog import TrainDialog
 from ui.model_selector_dialog import ModelSelectorDialog
 from ui.theme import DARK_THEME, LIGHT_THEME
 from core.canvas import Canvas, CanvasMode
@@ -140,6 +141,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.formatWidget.btn.setIcon(self.set_icon_color(QIcon(":/icon/格式.svg"), _ic))
         # 数据集按钮图标
         self.btnDatasetTool.setIcon(self.set_icon_color(QIcon(":/icon/wrench.svg"), _ic))
+        self.btnTrain.setIcon(self.set_icon_color(QIcon(":/icon/lightning-fill.svg"), _ic))
 
         # QToolButton 统一样式
         for btn in [self.btnUndo, self.btnRedo, self.btnDelete, self.btnSave, self.btnKeyboard]:
@@ -322,6 +324,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.formatWidget.format_changed.connect(self.set_current_format)
 
         self.btnDatasetTool.clicked.connect(self.open_dataset_tool)
+        self.btnTrain.clicked.connect(self.open_train_dialog)
 
         # self.actionFormatJSON.triggered.connect(lambda: self.set_current_format("json"))
         # self.actionFormatYOLO.triggered.connect(lambda: self.set_current_format("yolo"))
@@ -704,6 +707,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception as e:
             DialogOver(self, f"启动失败: {e}", "系统错误", "danger")
 
+    def open_train_dialog(self):
+        dialog = TrainDialog(self)
+        dialog.exec()
+
     def trigger_sam_prompt(self):
         if self.scene.mode == CanvasMode.POINT:
             DialogOver(self, "点标注模式下无法使用 SAM 智能提取", "提示", "warning")
@@ -774,6 +781,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.formatWidget.set_icon_only(True)
             self.btnDatasetTool.setText("")
+            self.btnTrain.setText("")
             self.samIcon.hide() # 收缩时隐藏左侧图标
             # SAM 开关竖向显示
             self.samSwitch.setFixedSize(26, 50)
@@ -798,6 +806,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.formatWidget.set_icon_only(False)
             self.btnDatasetTool.setText(" 数据集处理")
+            self.btnTrain.setText(" 模型训练")
             self.samIcon.show() # 展开时显示左侧图标
             # SAM 开关横向显示
             self.samSwitch.setFixedSize(50, 26)
@@ -861,6 +870,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.actionRBox.setIcon(self.set_icon_color(QIcon(":/icon/手机旋转1.svg"), self.current_icon_color))
             self.samIcon.setPixmap(self.set_icon_color(QIcon(":/icon/魔法-copy.svg"), self.current_icon_color).pixmap(24, 24))
             self.btnDatasetTool.setIcon(self.set_icon_color(QIcon(":/icon/wrench.svg"), self.current_icon_color))
+            self.btnTrain.setIcon(self.set_icon_color(QIcon(":/icon/lightning-fill.svg"), self.current_icon_color))
             self.formatWidget.btn.setIcon(self.set_icon_color(QIcon(":/icon/格式.svg"), self.current_icon_color))
         else:
             self.setStyleSheet(LIGHT_THEME)
@@ -883,6 +893,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.actionRBox.setIcon(self.set_icon_color(QIcon(":/icon/手机旋转1.svg"), self.current_icon_color))
             self.samIcon.setPixmap(self.set_icon_color(QIcon(":/icon/魔法-copy.svg"), self.current_icon_color).pixmap(24, 24))
             self.btnDatasetTool.setIcon(self.set_icon_color(QIcon(":/icon/wrench.svg"), self.current_icon_color))
+            self.btnTrain.setIcon(self.set_icon_color(QIcon(":/icon/lightning-fill.svg"), self.current_icon_color))
             self.formatWidget.btn.setIcon(self.set_icon_color(QIcon(":/icon/格式.svg"), self.current_icon_color))
 
     def show_author_info(self):

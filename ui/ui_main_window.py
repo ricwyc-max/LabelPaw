@@ -348,6 +348,9 @@ class Ui_MainWindow(object):
         self.btnDatasetTool = QPushButton(self.toolBar)
         self.btnDatasetTool.setObjectName(u"btnDatasetTool")
         self.toolBar.addWidget(self.btnDatasetTool)
+        self.btnTrain = QPushButton(self.toolBar)
+        self.btnTrain.setObjectName(u"btnTrain")
+        self.toolBar.addWidget(self.btnTrain)
         MainWindow.addToolBar(Qt.LeftToolBarArea, self.toolBar)
 
         self.toolBar.addAction(self.actionOpen)
@@ -399,5 +402,9 @@ class Ui_MainWindow(object):
         self.btnDatasetTool.setToolTip(QCoreApplication.translate("MainWindow", u"\u6570\u636e\u96c6\u5904\u7406", None))
 #endif // QT_CONFIG(tooltip)
         self.btnDatasetTool.setText(QCoreApplication.translate("MainWindow", u" \u6570\u636e\u96c6\u5904\u7406", None))
+#if QT_CONFIG(tooltip)
+        self.btnTrain.setToolTip(QCoreApplication.translate("MainWindow", u"YOLO \u6a21\u578b\u8bad\u7ec3", None))
+#endif // QT_CONFIG(tooltip)
+        self.btnTrain.setText(QCoreApplication.translate("MainWindow", u" \u6a21\u578b\u8bad\u7ec3", None))
     # retranslateUi
 

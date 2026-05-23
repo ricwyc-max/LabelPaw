@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QLabel, QTextEdit, QProgressBar, QMessageBox, QFileDialog,
     QCheckBox, QWidget
 )
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt, QObject, QProcess, Signal
 from PySide6.QtGui import QIcon
 
 
@@ -105,8 +105,8 @@ def count_images_in_path(path):
     return count
 
 
-class TrainWorker(QThread):
-    """YOLO 训练后台线程，通过重定向 stdout 捕获实时日志。"""
+class TrainWorker(QObject):
+    """YOLO 训练进程管理器，使用 QProcess 在独立进程中运行训练。"""
     log_signal = Signal(str)
     progress_signal = Signal(int)
     finished_signal = Signal(bool, str)
@@ -116,76 +116,102 @@ class TrainWorker(QThread):
         self.pretrained_path = pretrained_path
         self.data_yaml_path = data_yaml_path
         self.params = params
-        self._running = True
+        self.process = None
 
-    def stop(self):
-        self._running = False
+    def start(self):
+        """启动训练子进程。"""
+        # 创建临时训练脚本
+        script = self._make_train_script()
+        script_path = os.path.join(os.path.dirname(self.data_yaml_path), "_train_script.py")
+        with open(script_path, "w", encoding="utf-8") as f:
+            f.write(script)
 
-    def write(self, text):
-        """重定向 stdout.write() 到此方法，捕获 YOLO 日志。"""
-        self.log_signal.emit(text)
+        self.process = QProcess()
+        self.process.setProcessChannelMode(QProcess.MergedChannels)
+        self.process.readyReadStandardOutput.connect(self._on_stdout)
+        self.process.finished.connect(lambda: self._on_finished(script_path))
+
+        python = sys.executable
+        self.process.start(python, [script_path])
+
+    def _make_train_script(self):
+        """生成训练用的 Python 脚本内容。"""
+        return f'''import sys, re
+sys.stdout = sys.stderr  # 合并输出流便于捕获
+from ultralytics import YOLO
+
+model = YOLO({self.pretrained_path!r})
+results = model.train(
+    data={self.data_yaml_path!r},
+    epochs={self.params["epochs"]},
+    batch={self.params["batch"]},
+    imgsz={self.params["imgsz"]},
+    device={self.params["device"]!r},
+    workers={self.params["workers"]},
+    lr0={self.params["lr0"]},
+    patience={self.params["patience"]},
+    verbose=True,
+)
+print("__TRAIN_DONE__")
+metrics = model.val()
+print(f"__METRICS__ mAP50={{metrics.box.map50:.4f}} mAP50-95={{metrics.box.map:.4f}}")
+save_dir = getattr(model.trainer, 'save_dir', '') if hasattr(model, 'trainer') else ''
+if save_dir:
+    import os as _os
+    best = _os.path.join(save_dir, "weights", "best.pt")
+    if _os.path.exists(best):
+        print(f"__BEST__{{best}}")
+print("__ALL_DONE__")
+'''
+
+    def _on_stdout(self):
+        """处理子进程的标准输出。"""
+        data = self.process.readAllStandardOutput().data().decode("utf-8", errors="replace")
+        # 解析特殊标记
+        if "__TRAIN_DONE__" in data:
+            data = data.replace("__TRAIN_DONE__", "")
+        if "__ALL_DONE__" in data:
+            data = data.replace("__ALL_DONE__", "")
+        m = re.search(r"__METRICS__ (.+)", data)
+        if m:
+            data = data.replace(m.group(0), "")
+        m = re.search(r"__BEST__(.+)", data)
+        if m:
+            best_path = m.group(1).strip()
+            data = data.replace(m.group(0), "")
+
+        if data.strip():
+            self.log_signal.emit(data)
+
         # 从日志中提取轮次信息更新进度
-        m = re.search(r"Epoch\s+(\d+)/(\d+)", text)
+        m = re.search(r"Epoch\s+(\d+)/(\d+)", data)
         if m:
             current = int(m.group(1))
             total = int(m.group(2))
-            progress = int(current / total * 100)
-            self.progress_signal.emit(progress)
+            self.progress_signal.emit(int(current / total * 100))
 
-    def flush(self):
-        pass
-
-    def run(self):
-        old_stdout = sys.stdout
-        old_stderr = sys.stderr
-        sys.stdout = self
-        sys.stderr = self
-
+    def _on_finished(self, script_path):
+        """子进程结束回调。"""
+        # 清理临时脚本
         try:
-            if not _ULTRA_AVAILABLE:
-                self.log_signal.emit("错误: ultralytics 未安装，请执行 pip install ultralytics\n")
-                self.finished_signal.emit(False, "ultralytics 未安装")
-                return
+            os.remove(script_path)
+        except OSError:
+            pass
 
-            self.log_signal.emit(f"加载预训练模型: {self.pretrained_path}\n")
-            model = YOLO(self.pretrained_path)
-
-            self.log_signal.emit("开始训练...\n")
-            model.train(
-                data=self.data_yaml_path,
-                epochs=self.params["epochs"],
-                batch=self.params["batch"],
-                imgsz=self.params["imgsz"],
-                device=self.params["device"],
-                workers=self.params["workers"],
-                lr0=self.params["lr0"],
-                patience=self.params["patience"],
-                verbose=True,
-            )
-
-            self.log_signal.emit("\n训练完成！正在验证...\n")
-            metrics = model.val()
-            self.log_signal.emit(f"验证完成: mAP50={metrics.box.map50:.4f}, mAP50-95={metrics.box.map:.4f}\n")
-
-            # 找到最佳权重路径
-            save_dir = model.trainer.save_dir if hasattr(model, 'trainer') else None
-            best_path = os.path.join(save_dir, "weights", "best.pt") if save_dir else ""
-
+        exit_code = self.process.exitCode() if self.process else -1
+        if exit_code == 0:
             self.progress_signal.emit(100)
-            if best_path and os.path.exists(best_path):
-                self.log_signal.emit(f"最佳模型已保存: {best_path}\n")
-                self.finished_signal.emit(True, best_path)
-            else:
-                self.finished_signal.emit(True, "训练完成")
+            self.finished_signal.emit(True, "训练完成")
+        else:
+            self.finished_signal.emit(False, f"进程退出, code={exit_code}")
 
-        except Exception as e:
-            import traceback
-            self.log_signal.emit(f"\n训练失败: {e}\n{traceback.format_exc()}\n")
-            self.finished_signal.emit(False, str(e))
-
-        finally:
-            sys.stdout = old_stdout
-            sys.stderr = old_stderr
+    def stop(self):
+        """停止训练进程。"""
+        if self.process and self.process.state() != QProcess.NotRunning:
+            self.process.kill()
+            self.process.waitForFinished(3000)
+            self.log_signal.emit("\n⚠️ 训练已手动停止\n")
+            self.finished_signal.emit(False, "已停止")
 
 
 class TrainDialog(QDialog):
@@ -387,6 +413,7 @@ class TrainDialog(QDialog):
         self.worker.progress_signal.connect(self.progress_bar.setValue)
         self.worker.finished_signal.connect(self._on_finished)
         self.worker.start()
+        self.log_output.insertPlainText("正在启动训练进程...\n")
 
     def _stop_training(self):
         """停止训练。"""

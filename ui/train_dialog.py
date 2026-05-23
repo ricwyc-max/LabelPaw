@@ -157,7 +157,7 @@ if os.path.exists(model_path):
             pass
     except zipfile.BadZipFile:
         os.remove(model_path)
-        print("检测到损坏的模型文件，自动删除重新下载...\n")
+        print("检测到损坏的模型文件，自动删除重新下载...")
 
 # 也检查工作目录中可能存在的损坏文件
 if os.path.exists(model_name):
@@ -166,7 +166,7 @@ if os.path.exists(model_name):
             pass
     except zipfile.BadZipFile:
         os.remove(model_name)
-        print("检测到损坏的模型文件，已删除\n")
+        print("检测到损坏的模型文件，已删除")
 
 if not os.path.exists(model_path):
     model = YOLO({self.pretrained_path!r})

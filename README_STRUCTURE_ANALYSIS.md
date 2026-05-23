@@ -54,6 +54,7 @@ LabelPaw/
 │   ├── theme.py                     ★★ 亮色/暗黑主题 QSS 样式
 │   ├── style.qss                    ★ 额外样式表
 │   ├── template_dialog.py           ★★ 骨架模板编辑对话框
+│   ├── train_dialog.py              ★★ YOLO 训练对话框
 │   ├── model_selector_dialog.py     ★ 模型选择弹窗
 │   ├── author_info.py               ★ 作者信息弹窗
 │   └── icon/                        ★ 图标资源

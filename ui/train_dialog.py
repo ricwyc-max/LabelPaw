@@ -378,7 +378,8 @@ class TrainDialog(QDialog):
         name_layout.addRow("实验名称:", self.exp_name)
         layout.addWidget(name_group)
 
-        # ── 训练参数 ──
+        # ── 训练参数 + 高级参数（左右并列）──
+        param_row = QHBoxLayout()
         param_group = QGroupBox("训练参数")
         param_layout = QFormLayout(param_group)
 
@@ -434,7 +435,7 @@ class TrainDialog(QDialog):
         param_layout.addRow("学习率:", self.spin_lr0)
         param_layout.addRow("早停耐心:", self.spin_patience)
 
-        layout.addWidget(param_group)
+        param_row.addWidget(param_group)
 
         # ── 高级参数 ──
         adv_group = QGroupBox("高级参数（优化器 / 图像增强）")
@@ -515,7 +516,8 @@ class TrainDialog(QDialog):
         r4.addWidget(QLabel("V:")); r4.addWidget(self.spin_hsv_v, 1)
         adv_layout.addRow("HSV 增强:", r4)
 
-        layout.addWidget(adv_group)
+        param_row.addWidget(adv_group)
+        layout.addLayout(param_row)
 
         # ── 操作按钮 ──
         btn_row = QHBoxLayout()

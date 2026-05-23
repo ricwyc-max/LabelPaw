@@ -169,7 +169,7 @@ if os.path.exists(model_path):
             alt = model_path + "." + str(uuid.uuid4()) + ".bak"
             try:
                 shutil.move(model_path, alt)
-                print(f"损坏的模型文件被占用，已重命名为 {alt}")
+                print(f"损坏的模型文件被占用，已重命名为 {{alt}}")
             except Exception as e:
                 print(f"无法处理损坏的模型文件: {e}")
 
@@ -194,7 +194,7 @@ if os.path.exists(model_name):
             alt = model_name + "." + str(uuid.uuid4()) + ".bak"
             try:
                 shutil.move(model_name, alt)
-                print(f"损坏的模型文件被占用，已重命名为 {alt}")
+                print(f"损坏的模型文件被占用，已重命名为 {{alt}}")
             except Exception as e:
                 print(f"无法处理损坏的模型文件: {e}")
 

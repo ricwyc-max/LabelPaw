@@ -204,8 +204,15 @@ if __name__ == '__main__':
         project=os.path.join(__save_path__, "train"),
         name=__exp_name__,
         epochs=__epochs__, batch=__batch__, imgsz=__imgsz__,
-        device=_device, workers=__workers__, lr0=__lr0__,
-        patience=__patience__, verbose=True,
+        device=_device, workers=__workers__,
+        lr0=__lr0__, lrf=__lrf__, momentum=__momentum__,
+        weight_decay=__wd__, optimizer=__optim__,
+        patience=__patience__,
+        degrees=__degrees__, scale=__scale__,
+        translate=__translate__, mosaic=__mosaic__, mixup=__mixup__,
+        fliplr=__fliplr__, flipud=__flipud__,
+        hsv_h=__hsv_h__, hsv_s=__hsv_s__, hsv_v=__hsv_v__,
+        verbose=True,
     )
     print("__TRAIN_DONE__")
     metrics = model.val()
@@ -226,7 +233,21 @@ if __name__ == '__main__':
  .replace("__device__", repr(p["device"])) \
  .replace("__workers__", str(p["workers"])) \
  .replace("__lr0__", str(p["lr0"])) \
- .replace("__patience__", str(p["patience"]))
+ .replace("__lrf__", str(p["lrf"])) \
+ .replace("__momentum__", str(p["momentum"])) \
+ .replace("__wd__", str(p["weight_decay"])) \
+ .replace("__optim__", repr(p["optimizer"])) \
+ .replace("__patience__", str(p["patience"])) \
+ .replace("__degrees__", str(p["degrees"])) \
+ .replace("__scale__", str(p["scale"])) \
+ .replace("__translate__", str(p["translate"])) \
+ .replace("__mosaic__", str(p["mosaic"])) \
+ .replace("__mixup__", str(p["mixup"])) \
+ .replace("__fliplr__", str(p["fliplr"])) \
+ .replace("__flipud__", str(p["flipud"])) \
+ .replace("__hsv_h__", str(p["hsv_h"])) \
+ .replace("__hsv_s__", str(p["hsv_s"])) \
+ .replace("__hsv_v__", str(p["hsv_v"]))
 
     def _on_stdout(self):
         """处理子进程的标准输出，合并 \r 进度更新到进度条。"""
@@ -415,6 +436,87 @@ class TrainDialog(QDialog):
 
         layout.addWidget(param_group)
 
+        # ── 高级参数 ──
+        adv_group = QGroupBox("高级参数（优化器 / 图像增强）")
+        adv_layout = QFormLayout(adv_group)
+
+        self.combo_optim = QComboBox()
+        self.combo_optim.addItems(["auto", "SGD", "Adam", "AdamW"])
+        adv_layout.addRow("优化器:", self.combo_optim)
+
+        # lrf
+        r1 = QHBoxLayout()
+        self.spin_lrf = QDoubleSpinBox()
+        self.spin_lrf.setRange(0.001, 1.0); self.spin_lrf.setValue(0.01)
+        self.spin_lrf.setSingleStep(0.001); self.spin_lrf.setDecimals(4)
+        self.spin_lrf.setToolTip("最终学习率 = lr0 * lrf")
+        self.spin_momentum = QDoubleSpinBox()
+        self.spin_momentum.setRange(0.01, 0.99); self.spin_momentum.setValue(0.937)
+        self.spin_momentum.setSingleStep(0.01); self.spin_momentum.setDecimals(3)
+        self.spin_momentum.setToolTip("SGD momentum / Adam beta1")
+        r1.addWidget(QLabel("最终LR率:")); r1.addWidget(self.spin_lrf, 1)
+        r1.addWidget(QLabel("动量:")); r1.addWidget(self.spin_momentum, 1)
+        adv_layout.addRow("学习率调整:", r1)
+
+        # weight_decay
+        self.spin_wd = QDoubleSpinBox()
+        self.spin_wd.setRange(0, 1.0); self.spin_wd.setValue(0.0005)
+        self.spin_wd.setSingleStep(0.0001); self.spin_wd.setDecimals(4)
+        adv_layout.addRow("权重衰减:", self.spin_wd)
+
+        # augmentation: degrees / scale / translate
+        r2 = QHBoxLayout()
+        self.spin_degrees = QDoubleSpinBox()
+        self.spin_degrees.setRange(0, 180); self.spin_degrees.setValue(0.0)
+        self.spin_degrees.setSingleStep(5); self.spin_degrees.setSuffix("°")
+        self.spin_degrees.setToolTip("旋转增强角度")
+        self.spin_scale = QDoubleSpinBox()
+        self.spin_scale.setRange(0, 3.0); self.spin_scale.setValue(0.5)
+        self.spin_scale.setSingleStep(0.1); self.spin_scale.setToolTip("缩放增强比例")
+        self.spin_translate = QDoubleSpinBox()
+        self.spin_translate.setRange(0, 1.0); self.spin_translate.setValue(0.1)
+        self.spin_translate.setSingleStep(0.05); self.spin_translate.setToolTip("平移增强比例")
+        r2.addWidget(QLabel("旋转:")); r2.addWidget(self.spin_degrees, 1)
+        r2.addWidget(QLabel("缩放:")); r2.addWidget(self.spin_scale, 1)
+        r2.addWidget(QLabel("平移:")); r2.addWidget(self.spin_translate, 1)
+        adv_layout.addRow("几何增强:", r2)
+
+        # mosaic / mixup / copy_paste / flip
+        r3 = QHBoxLayout()
+        self.spin_mosaic = QDoubleSpinBox()
+        self.spin_mosaic.setRange(0, 1.0); self.spin_mosaic.setValue(1.0)
+        self.spin_mosaic.setSingleStep(0.1); self.spin_mosaic.setToolTip("Mosaic 增强概率")
+        self.spin_mixup = QDoubleSpinBox()
+        self.spin_mixup.setRange(0, 1.0); self.spin_mixup.setValue(0.0)
+        self.spin_mixup.setSingleStep(0.1); self.spin_mixup.setToolTip("MixUp 增强概率")
+        self.check_fliplr = QCheckBox("水平翻转")
+        self.check_fliplr.setChecked(True)
+        self.check_flipud = QCheckBox("垂直翻转")
+        self.check_flipud.setChecked(False)
+        r3.addWidget(QLabel("Mosaic:")); r3.addWidget(self.spin_mosaic, 1)
+        r3.addWidget(QLabel("MixUp:")); r3.addWidget(self.spin_mixup, 1)
+        r3.addWidget(self.check_fliplr)
+        r3.addWidget(self.check_flipud)
+        adv_layout.addRow("增强策略:", r3)
+
+        # hsv
+        r4 = QHBoxLayout()
+        self.spin_hsv_h = QDoubleSpinBox()
+        self.spin_hsv_h.setRange(0, 180); self.spin_hsv_h.setValue(0.015)
+        self.spin_hsv_h.setSingleStep(0.005); self.spin_hsv_h.setDecimals(3)
+        self.spin_hsv_s = QDoubleSpinBox()
+        self.spin_hsv_s.setRange(0, 1.0); self.spin_hsv_s.setValue(0.7)
+        self.spin_hsv_s.setSingleStep(0.1); self.spin_hsv_s.setDecimals(3)
+        self.spin_hsv_v = QDoubleSpinBox()
+        self.spin_hsv_v.setRange(0, 1.0); self.spin_hsv_v.setValue(0.4)
+        self.spin_hsv_v.setSingleStep(0.1); self.spin_hsv_v.setDecimals(3)
+        r4.addWidget(QLabel("H:")); r4.addWidget(self.spin_hsv_h, 1)
+        r4.addWidget(QLabel("S:")); r4.addWidget(self.spin_hsv_s, 1)
+        r4.addWidget(QLabel("V:")); r4.addWidget(self.spin_hsv_v, 1)
+        adv_layout.addRow("HSV 增强:", r4)
+
+        layout.addWidget(adv_group)
+
         # ── 操作按钮 ──
         btn_row = QHBoxLayout()
         self.btn_train = QPushButton("开始训练")
@@ -532,7 +634,21 @@ class TrainDialog(QDialog):
             "device": self.combo_device.currentText(),
             "workers": self.spin_workers.value(),
             "lr0": self.spin_lr0.value(),
+            "lrf": self.spin_lrf.value(),
+            "momentum": self.spin_momentum.value(),
+            "weight_decay": self.spin_wd.value(),
+            "optimizer": self.combo_optim.currentText(),
             "patience": self.spin_patience.value(),
+            "degrees": self.spin_degrees.value(),
+            "scale": self.spin_scale.value(),
+            "translate": self.spin_translate.value(),
+            "mosaic": self.spin_mosaic.value(),
+            "mixup": self.spin_mixup.value(),
+            "fliplr": 0.5 if self.check_fliplr.isChecked() else 0.0,
+            "flipud": 0.5 if self.check_flipud.isChecked() else 0.0,
+            "hsv_h": self.spin_hsv_h.value(),
+            "hsv_s": self.spin_hsv_s.value(),
+            "hsv_v": self.spin_hsv_v.value(),
         }
 
         self.log_output.clear()

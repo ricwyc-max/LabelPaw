@@ -17,7 +17,7 @@ class FormatSelectorWidget(QWidget):
         layout.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
         self.btn = QPushButton()
-        self.btn.setIcon(QIcon("ui/icon/格式.svg"))
+        self.btn.setIcon(QIcon(":/icon/格式.svg"))
         self.btn.setIconSize(QSize(20, 20))  # 放大图标
         self.btn.setText("　JSON 格式 ▾")
         self.btn.setCursor(Qt.PointingHandCursor)
@@ -153,8 +153,8 @@ class TemplateSelectorWidget(QWidget):
                 
                 if main_window:
                     try:
-                        btn_edit.setIcon(main_window.set_icon_color(QIcon("ui/icon/编辑.svg"), main_window.current_icon_color))
-                        btn_delete.setIcon(main_window.set_icon_color(QIcon("ui/icon/trash.svg"), QColor("#EF4444")))
+                        btn_edit.setIcon(main_window.set_icon_color(QIcon(":/icon/编辑.svg"), main_window.current_icon_color))
+                        btn_delete.setIcon(main_window.set_icon_color(QIcon(":/icon/trash.svg"), QColor("#EF4444")))
                     except:
                         pass
 

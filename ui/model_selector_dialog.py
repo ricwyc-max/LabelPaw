@@ -16,7 +16,7 @@ class ModelItemWidget(QWidget):
         
         self.icon_label = QLabel()
         if is_selected:
-            icon_path = "ui/icon/打勾1.svg"
+            icon_path = ":/icon/打勾1.svg"
             pixmap = QIcon(icon_path).pixmap(16, 16)
             
             # If dark theme, tint the icon to white/light gray

@@ -13,6 +13,18 @@
   <property name="windowTitle">
    <string>LabelPaw - 基于SAM3的智能标注系统</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow, QWidget { background-color: #020617; color: #F8FAFC; font-family: "Microsoft YaHei", sans-serif; }
+QToolBar { background-color: #0F172A; border: none; padding: 8px; spacing: 12px; }
+QPushButton { background-color: transparent; border: 1px solid transparent; border-radius: 6px; padding: 6px 12px; color: #F8FAFC; }
+QPushButton:hover { background-color: #1E293B; }
+QToolButton { border: none; background: transparent; border-radius: 6px; }
+QListWidget { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; color: #F8FAFC; }
+QLabel { color: #94A3B8; }
+QLineEdit { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 6px; padding: 6px; color: #F8FAFC; }
+QSplitter::handle { background: transparent; width: 1px; }
+QStatusBar { background-color: #0F172A; border-top: 1px solid #1E293B; color: #94A3B8; }</string>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="mainLayout">
     <property name="spacing">
@@ -674,6 +686,8 @@
    <header>ui.main_window</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

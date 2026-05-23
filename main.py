@@ -80,10 +80,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.yolo_worker = None
         
-        self.btnPredict.setIcon(QIcon("ui/icon/lightning-fill.svg"))
+        self.btnPredict.setIcon(QIcon(":/icon/lightning-fill.svg"))
         
         # 预测按钮动画
-        self.predict_movie = QMovie("ui/icon/Loading.gif")
+        self.predict_movie = QMovie(":/icon/Loading.gif")
         self.predict_movie.frameChanged.connect(self.update_predict_icon)
 
     def update_predict_icon(self):
@@ -100,27 +100,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         _ic = self.current_icon_color
 
         # QAction 图标着色（.ui 中不设图标，在代码中动态着色）
-        self.actionOpen.setIcon(self.set_icon_color(QIcon("ui/icon/folder.svg"), _ic))
-        self.actionRect.setIcon(self.set_icon_color(QIcon("ui/icon/rectangle.svg"), _ic))
-        self.actionPoly.setIcon(self.set_icon_color(QIcon("ui/icon/polygon.svg"), _ic))
-        self.actionPoint.setIcon(self.set_icon_color(QIcon("ui/icon/关键点.svg"), _ic))
-        self.actionRBox.setIcon(self.set_icon_color(QIcon("ui/icon/手机旋转1.svg"), _ic))
+        self.actionOpen.setIcon(self.set_icon_color(QIcon(":/icon/folder.svg"), _ic))
+        self.actionRect.setIcon(self.set_icon_color(QIcon(":/icon/rectangle.svg"), _ic))
+        self.actionPoly.setIcon(self.set_icon_color(QIcon(":/icon/polygon.svg"), _ic))
+        self.actionPoint.setIcon(self.set_icon_color(QIcon(":/icon/关键点.svg"), _ic))
+        self.actionRBox.setIcon(self.set_icon_color(QIcon(":/icon/手机旋转1.svg"), _ic))
 
         # 工具栏按钮图标着色
-        self.btnUndo.setIcon(self.set_icon_color(QIcon("ui/icon/arrow-u-up-left.svg"), _ic))
-        self.btnRedo.setIcon(self.set_icon_color(QIcon("ui/icon/arrow-u-up-right.svg"), _ic))
-        self.btnDelete.setIcon(self.set_icon_color(QIcon("ui/icon/trash.svg"), _ic))
-        self.btnSave.setIcon(self.set_icon_color(QIcon("ui/icon/floppy-disk.svg"), _ic))
-        self.btnKeyboard.setIcon(self.set_icon_color(QIcon("ui/icon/keyboard.svg"), _ic))
+        self.btnUndo.setIcon(self.set_icon_color(QIcon(":/icon/arrow-u-up-left.svg"), _ic))
+        self.btnRedo.setIcon(self.set_icon_color(QIcon(":/icon/arrow-u-up-right.svg"), _ic))
+        self.btnDelete.setIcon(self.set_icon_color(QIcon(":/icon/trash.svg"), _ic))
+        self.btnSave.setIcon(self.set_icon_color(QIcon(":/icon/floppy-disk.svg"), _ic))
+        self.btnKeyboard.setIcon(self.set_icon_color(QIcon(":/icon/keyboard.svg"), _ic))
 
         # SAM 图标
         self.samIcon.setPixmap(
-            self.set_icon_color(QIcon("ui/icon/魔法-copy.svg"), _ic).pixmap(24, 24)
+            self.set_icon_color(QIcon(":/icon/魔法-copy.svg"), _ic).pixmap(24, 24)
         )
         # 格式选择图标
-        self.formatWidget.btn.setIcon(self.set_icon_color(QIcon("ui/icon/格式.svg"), _ic))
+        self.formatWidget.btn.setIcon(self.set_icon_color(QIcon(":/icon/格式.svg"), _ic))
         # 数据集按钮图标
-        self.btnDatasetTool.setIcon(self.set_icon_color(QIcon("ui/icon/wrench.svg"), _ic))
+        self.btnDatasetTool.setIcon(self.set_icon_color(QIcon(":/icon/wrench.svg"), _ic))
 
         # QToolButton 统一样式
         for btn in [self.btnUndo, self.btnRedo, self.btnDelete, self.btnSave, self.btnKeyboard]:
@@ -146,11 +146,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self._actionButtons.append(btn)
 
         # Logo 加载
-        logo_path = "ui/icon/logo.png"
-        if os.path.exists(logo_path):
-            pix = QPixmap(logo_path)
-            if not pix.isNull():
-                self.logoIcon.setPixmap(pix.scaled(28, 28, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        logo_path = ":/icon/logo.png"
+        pix = QPixmap(logo_path)
+        if not pix.isNull():
+            self.logoIcon.setPixmap(pix.scaled(28, 28, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
         # btnDrawMode / btnSmartMode 互斥
         self.btnDrawMode.toggled.connect(
@@ -202,7 +201,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         display_name = model_info.get("display_name", key)
         
         self.btnModelSelector.setText(f" {display_name} ▾")
-        self.btnModelSelector.setIcon(QIcon("ui/icon/s.svg"))
+        self.btnModelSelector.setIcon(QIcon(":/icon/s.svg"))
         
         if key in SAM_MODEL_MAP or model_info.get("type", "").startswith("sam"):
             self.btnPredict.hide()
@@ -357,7 +356,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def on_predict_finished(self, shapes):
         self.predict_movie.stop()
         self.btnPredict.setText(self.original_predict_text)
-        self.btnPredict.setIcon(QIcon("ui/icon/lightning-fill.svg"))
+        self.btnPredict.setIcon(QIcon(":/icon/lightning-fill.svg"))
         self.btnPredict.setEnabled(True)
         
         if not shapes:
@@ -506,7 +505,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def on_predict_error(self, err_msg):
         self.predict_movie.stop()
         self.btnPredict.setText(self.original_predict_text)
-        self.btnPredict.setIcon(QIcon("ui/icon/lightning-fill.svg"))
+        self.btnPredict.setIcon(QIcon(":/icon/lightning-fill.svg"))
         self.btnPredict.setEnabled(True)
         DialogOver(self, f"预测失败: {err_msg}", "错误", "danger")
         self.statusBar.showMessage("预测出错", 3000)
@@ -570,8 +569,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         # 强制刷新图标渲染
         from PySide6.QtGui import QIcon
-        self.btnUndo.setIcon(self.set_icon_color(QIcon("ui/icon/arrow-u-up-left.svg"), self.current_icon_color))
-        self.btnRedo.setIcon(self.set_icon_color(QIcon("ui/icon/arrow-u-up-right.svg"), self.current_icon_color))
+        self.btnUndo.setIcon(self.set_icon_color(QIcon(":/icon/arrow-u-up-left.svg"), self.current_icon_color))
+        self.btnRedo.setIcon(self.set_icon_color(QIcon(":/icon/arrow-u-up-right.svg"), self.current_icon_color))
 
     def restore_state(self, state):
         """根据快照数据，完全重建画板元素"""
@@ -736,7 +735,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.logoLabel.hide()
             
             # 收缩模式：缩小 Logo 图标
-            logo_path = "ui/icon/logo.png"
+            logo_path = ":/icon/logo.png"
             pix = QPixmap(logo_path).scaled(24, 24, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.logoIcon.setPixmap(pix)
             self.logoIcon.setFixedSize(24, 24)
@@ -760,7 +759,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # 展开模式：恢复 Logo 图标和文字
             self.logoLabel.show()
             self.logoLabel.setText("LabelPaw")
-            logo_path = "ui/icon/logo.png"
+            logo_path = ":/icon/logo.png"
             pix = QPixmap(logo_path).scaled(28, 28, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.logoIcon.setPixmap(pix)
             self.logoIcon.setFixedSize(28, 28)
@@ -819,21 +818,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # 更新深色图标
             from PySide6.QtGui import QIcon, QColor
             self.current_icon_color = QColor(255, 255, 255)
-            self.btnUndo.setIcon(self.set_icon_color(QIcon("ui/icon/arrow-u-up-left.svg"), self.current_icon_color))
-            self.btnRedo.setIcon(self.set_icon_color(QIcon("ui/icon/arrow-u-up-right.svg"), self.current_icon_color))
-            self.btnDelete.setIcon(self.set_icon_color(QIcon("ui/icon/trash.svg"), self.current_icon_color))
-            self.btnSave.setIcon(self.set_icon_color(QIcon("ui/icon/floppy-disk.svg"), self.current_icon_color))
-            self.btnKeyboard.setIcon(self.set_icon_color(QIcon("ui/icon/keyboard.svg"), self.current_icon_color))
+            self.btnUndo.setIcon(self.set_icon_color(QIcon(":/icon/arrow-u-up-left.svg"), self.current_icon_color))
+            self.btnRedo.setIcon(self.set_icon_color(QIcon(":/icon/arrow-u-up-right.svg"), self.current_icon_color))
+            self.btnDelete.setIcon(self.set_icon_color(QIcon(":/icon/trash.svg"), self.current_icon_color))
+            self.btnSave.setIcon(self.set_icon_color(QIcon(":/icon/floppy-disk.svg"), self.current_icon_color))
+            self.btnKeyboard.setIcon(self.set_icon_color(QIcon(":/icon/keyboard.svg"), self.current_icon_color))
             
             # 更新侧边栏图标
-            self.actionOpen.setIcon(self.set_icon_color(QIcon("ui/icon/folder.svg"), self.current_icon_color))
-            self.actionRect.setIcon(self.set_icon_color(QIcon("ui/icon/rectangle.svg"), self.current_icon_color))
-            self.actionPoly.setIcon(self.set_icon_color(QIcon("ui/icon/polygon.svg"), self.current_icon_color))
-            self.actionPoint.setIcon(self.set_icon_color(QIcon("ui/icon/关键点.svg"), self.current_icon_color))
-            self.actionRBox.setIcon(self.set_icon_color(QIcon("ui/icon/手机旋转1.svg"), self.current_icon_color))
-            self.samIcon.setPixmap(self.set_icon_color(QIcon("ui/icon/魔法-copy.svg"), self.current_icon_color).pixmap(24, 24))
-            self.btnDatasetTool.setIcon(self.set_icon_color(QIcon("ui/icon/wrench.svg"), self.current_icon_color))
-            self.formatWidget.btn.setIcon(self.set_icon_color(QIcon("ui/icon/格式.svg"), self.current_icon_color))
+            self.actionOpen.setIcon(self.set_icon_color(QIcon(":/icon/folder.svg"), self.current_icon_color))
+            self.actionRect.setIcon(self.set_icon_color(QIcon(":/icon/rectangle.svg"), self.current_icon_color))
+            self.actionPoly.setIcon(self.set_icon_color(QIcon(":/icon/polygon.svg"), self.current_icon_color))
+            self.actionPoint.setIcon(self.set_icon_color(QIcon(":/icon/关键点.svg"), self.current_icon_color))
+            self.actionRBox.setIcon(self.set_icon_color(QIcon(":/icon/手机旋转1.svg"), self.current_icon_color))
+            self.samIcon.setPixmap(self.set_icon_color(QIcon(":/icon/魔法-copy.svg"), self.current_icon_color).pixmap(24, 24))
+            self.btnDatasetTool.setIcon(self.set_icon_color(QIcon(":/icon/wrench.svg"), self.current_icon_color))
+            self.formatWidget.btn.setIcon(self.set_icon_color(QIcon(":/icon/格式.svg"), self.current_icon_color))
         else:
             self.setStyleSheet(LIGHT_THEME)
             self.btnThemeToggle.setText("🌙")
@@ -841,21 +840,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # 更新浅色图标
             from PySide6.QtGui import QIcon, QColor
             self.current_icon_color = QColor(15, 23, 42) # 深灰色
-            self.btnUndo.setIcon(self.set_icon_color(QIcon("ui/icon/arrow-u-up-left.svg"), self.current_icon_color))
-            self.btnRedo.setIcon(self.set_icon_color(QIcon("ui/icon/arrow-u-up-right.svg"), self.current_icon_color))
-            self.btnDelete.setIcon(self.set_icon_color(QIcon("ui/icon/trash.svg"), self.current_icon_color))
-            self.btnSave.setIcon(self.set_icon_color(QIcon("ui/icon/floppy-disk.svg"), self.current_icon_color))
-            self.btnKeyboard.setIcon(self.set_icon_color(QIcon("ui/icon/keyboard.svg"), self.current_icon_color))
+            self.btnUndo.setIcon(self.set_icon_color(QIcon(":/icon/arrow-u-up-left.svg"), self.current_icon_color))
+            self.btnRedo.setIcon(self.set_icon_color(QIcon(":/icon/arrow-u-up-right.svg"), self.current_icon_color))
+            self.btnDelete.setIcon(self.set_icon_color(QIcon(":/icon/trash.svg"), self.current_icon_color))
+            self.btnSave.setIcon(self.set_icon_color(QIcon(":/icon/floppy-disk.svg"), self.current_icon_color))
+            self.btnKeyboard.setIcon(self.set_icon_color(QIcon(":/icon/keyboard.svg"), self.current_icon_color))
             
             # 更新侧边栏图标
-            self.actionOpen.setIcon(self.set_icon_color(QIcon("ui/icon/folder.svg"), self.current_icon_color))
-            self.actionRect.setIcon(self.set_icon_color(QIcon("ui/icon/rectangle.svg"), self.current_icon_color))
-            self.actionPoly.setIcon(self.set_icon_color(QIcon("ui/icon/polygon.svg"), self.current_icon_color))
-            self.actionPoint.setIcon(self.set_icon_color(QIcon("ui/icon/关键点.svg"), self.current_icon_color))
-            self.actionRBox.setIcon(self.set_icon_color(QIcon("ui/icon/手机旋转1.svg"), self.current_icon_color))
-            self.samIcon.setPixmap(self.set_icon_color(QIcon("ui/icon/魔法-copy.svg"), self.current_icon_color).pixmap(24, 24))
-            self.btnDatasetTool.setIcon(self.set_icon_color(QIcon("ui/icon/wrench.svg"), self.current_icon_color))
-            self.formatWidget.btn.setIcon(self.set_icon_color(QIcon("ui/icon/格式.svg"), self.current_icon_color))
+            self.actionOpen.setIcon(self.set_icon_color(QIcon(":/icon/folder.svg"), self.current_icon_color))
+            self.actionRect.setIcon(self.set_icon_color(QIcon(":/icon/rectangle.svg"), self.current_icon_color))
+            self.actionPoly.setIcon(self.set_icon_color(QIcon(":/icon/polygon.svg"), self.current_icon_color))
+            self.actionPoint.setIcon(self.set_icon_color(QIcon(":/icon/关键点.svg"), self.current_icon_color))
+            self.actionRBox.setIcon(self.set_icon_color(QIcon(":/icon/手机旋转1.svg"), self.current_icon_color))
+            self.samIcon.setPixmap(self.set_icon_color(QIcon(":/icon/魔法-copy.svg"), self.current_icon_color).pixmap(24, 24))
+            self.btnDatasetTool.setIcon(self.set_icon_color(QIcon(":/icon/wrench.svg"), self.current_icon_color))
+            self.formatWidget.btn.setIcon(self.set_icon_color(QIcon(":/icon/格式.svg"), self.current_icon_color))
 
     def show_author_info(self):
         dialog = AuthorInfoDialog(self)
@@ -1245,7 +1244,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         count = len(selected_items)
         delete_action = menu.addAction(f"删除选中的 {count} 个文件")
-        delete_action.setIcon(QIcon("ui/icon/trash.svg"))
+        delete_action.setIcon(QIcon(":/icon/trash.svg"))
         
         action = menu.exec(self.listFiles.mapToGlobal(pos))
         if action == delete_action:

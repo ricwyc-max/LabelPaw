@@ -23,12 +23,23 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QGraphicsView, Q
     QVBoxLayout, QWidget)
 
 from ui.main_window import (CanvasView, FormatSelectorWidget, SwitchControl, TemplateSelectorWidget)
+import resources_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(1280, 800)
+        MainWindow.setStyleSheet(u"QMainWindow, QWidget { background-color: #020617; color: #F8FAFC; font-family: \"Microsoft YaHei\", sans-serif; }\n"
+"QToolBar { background-color: #0F172A; border: none; padding: 8px; spacing: 12px; }\n"
+"QPushButton { background-color: transparent; border: 1px solid transparent; border-radius: 6px; padding: 6px 12px; color: #F8FAFC; }\n"
+"QPushButton:hover { background-color: #1E293B; }\n"
+"QToolButton { border: none; background: transparent; border-radius: 6px; }\n"
+"QListWidget { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 8px; color: #F8FAFC; }\n"
+"QLabel { color: #94A3B8; }\n"
+"QLineEdit { background-color: #0F172A; border: 1px solid #1E293B; border-radius: 6px; padding: 6px; color: #F8FAFC; }\n"
+"QSplitter::handle { background: transparent; width: 1px; }\n"
+"QStatusBar { background-color: #0F172A; border-top: 1px solid #1E293B; color: #94A3B8; }")
         self.actionOpen = QAction(MainWindow)
         self.actionOpen.setObjectName(u"actionOpen")
         self.actionRect = QAction(MainWindow)

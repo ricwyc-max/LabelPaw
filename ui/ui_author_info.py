@@ -17,6 +17,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QDialog, QLabel, QPushButton,
     QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
+import resources_rc
 
 class Ui_AuthorInfoDialog(object):
     def setupUi(self, AuthorInfoDialog):

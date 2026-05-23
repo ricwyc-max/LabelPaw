@@ -287,7 +287,7 @@ class KeypointHandle(QGraphicsEllipseItem):
             return
 
         from PySide6.QtGui import QCursor, QIcon
-        icon_path = "ui/icon/hand-grabbing-duotone.svg"
+        icon_path = ":/icon/hand-grabbing-duotone.svg"
         
         try:
             pixmap = QIcon(icon_path).pixmap(24, 24)
@@ -371,7 +371,7 @@ class KeypointHandle(QGraphicsEllipseItem):
             from PySide6.QtGui import QCursor, QIcon
             parent = self.parentItem()
             is_editing = parent and parent.isSelected()
-            icon_path = "ui/icon/hand-grabbing-duotone.svg" if is_editing else "ui/icon/hand-grabbing-duotone.svg"
+            icon_path = ":/icon/hand-grabbing-duotone.svg" if is_editing else ":/icon/hand-grabbing-duotone.svg"
             try:
                 pixmap = QIcon(icon_path).pixmap(24, 24)
                 self.setCursor(QCursor(pixmap, 12, 12))

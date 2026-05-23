@@ -515,8 +515,8 @@ class RatioDialog(QDialog):
                 background-color: #f5f7fa;
                 border-left: 1px solid #dcdfe6;
             }
-            QSpinBox::up-button { image: url(ui/icon/caret-up.svg); padding: 2px; }
-            QSpinBox::down-button { image: url(ui/icon/caret-down.svg); padding: 2px; }
+            QSpinBox::up-button { image: url(:/icon/caret-up.svg); padding: 2px; }
+            QSpinBox::down-button { image: url(:/icon/caret-down.svg); padding: 2px; }
             QSpinBox::up-button:hover, QSpinBox::down-button:hover { background-color: #e9e9eb; }
             
             QPushButton {

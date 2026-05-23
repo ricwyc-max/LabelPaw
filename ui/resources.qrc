@@ -1,0 +1,29 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icon/arrow-u-up-left.svg</file>
+        <file>icon/arrow-u-up-right.svg</file>
+        <file>icon/caret-down.svg</file>
+        <file>icon/caret-up.svg</file>
+        <file>icon/check.svg</file>
+        <file>icon/floppy-disk.svg</file>
+        <file>icon/folder.svg</file>
+        <file>icon/hand-grabbing-duotone.svg</file>
+        <file>icon/hand-grabbing.svg</file>
+        <file>icon/keyboard.svg</file>
+        <file>icon/lightning-fill.svg</file>
+        <file>icon/Loading.gif</file>
+        <file>icon/logo.png</file>
+        <file>icon/polygon.svg</file>
+        <file>icon/rectangle.svg</file>
+        <file>icon/s.svg</file>
+        <file>icon/trash.svg</file>
+        <file>icon/wrench.svg</file>
+        <file>icon/关键点.svg</file>
+        <file>icon/手机旋转1.svg</file>
+        <file>icon/打勾1.svg</file>
+        <file>icon/格式.svg</file>
+        <file>icon/编辑.svg</file>
+        <file>icon/魔法-copy.svg</file>
+        <file>style.qss</file>
+    </qresource>
+</RCC>

@@ -40,7 +40,7 @@ class KeypointItemWidget(QWidget):
         
         # Delete button
         self.del_btn = QToolButton()
-        icon = QIcon("ui/icon/trash.svg")
+        icon = QIcon(":/icon/trash.svg")
         if self.is_dark_theme:
             self.del_btn.setIcon(self._set_icon_color(icon, QColor("#EF4444")))
         else:

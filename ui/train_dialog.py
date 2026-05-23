@@ -213,32 +213,17 @@ print("__ALL_DONE__")
             if not line:
                 continue
 
-            # 下载进度行（用进度条代替日志刷屏）
-            if "Downloading" in line:
-                m_pct = re.search(r"(\d+)%", line)
-                if m_pct:
-                    self.progress_signal.emit(int(m_pct.group(1)))
-                # 只在首次下载时输出一行提示
-                if not hasattr(self, '_download_started'):
-                    self._download_started = True
-                    self.log_signal.emit("正在下载预训练模型，请稍候...\n")
-                continue
-
-            # 训练轮次进度
+            # 训练/下载进度 → 更新进度条
+            m_pct = re.search(r"(\d+)%", line)
+            if m_pct and ("Downloading" in line or "Epoch" in line):
+                self.progress_signal.emit(int(m_pct.group(1)))
             m_epoch = re.search(r"Epoch\s+(\d+)/(\d+)", line)
             if m_epoch:
-                cur, total = int(m_epoch.group(1)), int(m_epoch.group(2))
-                self.progress_signal.emit(int(cur / total * 100))
+                self.progress_signal.emit(int(int(m_epoch.group(1)) / int(m_epoch.group(2)) * 100))
 
             # 过滤特殊标记
-            for tag in ("__TRAIN_DONE__", "__ALL_DONE__"):
+            for tag in ("__TRAIN_DONE__", "__ALL_DONE__", "__METRICS__", "__BEST__"):
                 line = line.replace(tag, "")
-            m_metric = re.search(r"__METRICS__ (.+)", line)
-            if m_metric:
-                line = line.replace(m_metric.group(0), "")
-            m_best = re.search(r"__BEST__(.+)", line)
-            if m_best:
-                line = line.replace(m_best.group(0), "")
 
             if line.strip():
                 self.log_signal.emit(line + "\n")

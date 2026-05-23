@@ -154,9 +154,11 @@ import sys, os, re, shutil, zipfile, time, uuid
 sys.stdout = sys.stderr
 import torch.multiprocessing as _mp
 _mp.freeze_support()
-from ultralytics import YOLO
 
-model_name = os.path.basename(__pretrained__)
+def main():
+    from ultralytics import YOLO
+
+    model_name = os.path.basename(__pretrained__)
 weights_dir = __save_path__
 os.makedirs(weights_dir, exist_ok=True)
 model_path = os.path.join(weights_dir, model_name)
@@ -216,6 +218,9 @@ if save_dir:
     if os.path.exists(best):
         print(f"__BEST__{best}")
 print("__ALL_DONE__")
+
+if __name__ == '__main__':
+    main()
 """.replace("__pretrained__", repr(self.pretrained_path)) \
  .replace("__save_path__", repr(p["save_path"])) \
  .replace("__data_yaml__", repr(self.data_yaml_path)) \

@@ -117,6 +117,7 @@ class TrainWorker(QObject):
         self.data_yaml_path = data_yaml_path
         self.params = params
         self.process = None
+        self._output_buffer = ""
 
     def start(self):
         """启动训练子进程。"""
@@ -181,30 +182,45 @@ print("__ALL_DONE__")
 '''
 
     def _on_stdout(self):
-        """处理子进程的标准输出。"""
-        data = self.process.readAllStandardOutput().data().decode("utf-8", errors="replace")
-        # 解析特殊标记
-        if "__TRAIN_DONE__" in data:
-            data = data.replace("__TRAIN_DONE__", "")
-        if "__ALL_DONE__" in data:
-            data = data.replace("__ALL_DONE__", "")
-        m = re.search(r"__METRICS__ (.+)", data)
-        if m:
-            data = data.replace(m.group(0), "")
-        m = re.search(r"__BEST__(.+)", data)
-        if m:
-            best_path = m.group(1).strip()
-            data = data.replace(m.group(0), "")
+        """处理子进程的标准输出，合并 \r 进度更新到进度条。"""
+        raw = self.process.readAllStandardOutput().data().decode("utf-8", errors="replace")
+        self._output_buffer += raw
 
-        if data.strip():
-            self.log_signal.emit(data)
+        # 按 \n 分割，处理每一行（下载进度用 \r 同行刷新）
+        while "\n" in self._output_buffer:
+            idx = self._output_buffer.index("\n")
+            line = self._output_buffer[:idx].strip()
+            self._output_buffer = self._output_buffer[idx + 1:]
 
-        # 从日志中提取轮次信息更新进度
-        m = re.search(r"Epoch\s+(\d+)/(\d+)", data)
-        if m:
-            current = int(m.group(1))
-            total = int(m.group(2))
-            self.progress_signal.emit(int(current / total * 100))
+            if not line:
+                continue
+
+            # 下载进度行（含 \r 刷新标记 → YOLO 输出中可能被 QProcess 拆开）
+            if "Downloading" in line:
+                m_pct = re.search(r"(\d+)%", line)
+                if m_pct:
+                    self.progress_signal.emit(int(m_pct.group(1)))
+                # 不输出到日志，用进度条代替
+                continue
+
+            # 训练轮次进度
+            m_epoch = re.search(r"Epoch\s+(\d+)/(\d+)", line)
+            if m_epoch:
+                cur, total = int(m_epoch.group(1)), int(m_epoch.group(2))
+                self.progress_signal.emit(int(cur / total * 100))
+
+            # 过滤特殊标记
+            for tag in ("__TRAIN_DONE__", "__ALL_DONE__"):
+                line = line.replace(tag, "")
+            m_metric = re.search(r"__METRICS__ (.+)", line)
+            if m_metric:
+                line = line.replace(m_metric.group(0), "")
+            m_best = re.search(r"__BEST__(.+)", line)
+            if m_best:
+                line = line.replace(m_best.group(0), "")
+
+            if line.strip():
+                self.log_signal.emit(line + "\n")
 
     def _on_finished(self, script_path):
         """子进程结束回调。"""

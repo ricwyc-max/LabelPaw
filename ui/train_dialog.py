@@ -139,95 +139,77 @@ class TrainWorker(QObject):
         self.process.start(python, [script_path])
 
     def _make_train_script(self):
-        """生成训练用的 Python 脚本内容。"""
-        return f'''import sys, os, re, shutil, zipfile, time, uuid
-sys.stdout = sys.stderr  # 合并输出流便于捕获
+        """生成训练用的 Python 脚本内容（模板替换方式，避免 f-string 嵌套）。"""
+        p = self.params
+        return """
+import sys, os, re, shutil, zipfile, time, uuid
+sys.stdout = sys.stderr
 from ultralytics import YOLO
 
-# 模型下载到指定目录
-model_name = os.path.basename({self.pretrained_path!r})
-weights_dir = {self.params["save_path"]!r}
+model_name = os.path.basename(__pretrained__)
+weights_dir = __save_path__
 os.makedirs(weights_dir, exist_ok=True)
 model_path = os.path.join(weights_dir, model_name)
 
-# 如果模型文件损坏（下载中断），自动删除重新下载
-if os.path.exists(model_path):
-    try:
-        with zipfile.ZipFile(model_path) as _zf:
-            pass
-    except zipfile.BadZipFile:
-        deleted = False
-        for _ in range(5):
-            try:
-                os.remove(model_path)
-                print("检测到损坏的模型文件，自动删除重新下载...")
-                deleted = True
-                break
-            except PermissionError:
-                time.sleep(1)
-        if not deleted:
-            alt = model_path + "." + str(uuid.uuid4()) + ".bak"
-            try:
-                shutil.move(model_path, alt)
-                print(f"损坏的模型文件被占用，已重命名为 {{alt}}")
-            except Exception as e:
-                print(f"无法处理损坏的模型文件: {e}")
-
-# 也检查工作目录中可能存在的损坏文件
-if os.path.exists(model_name):
-    try:
-        with zipfile.ZipFile(model_name) as _zf:
-            pass
-    except zipfile.BadZipFile:
-        # 多试几次删除（可能被杀软或前一进程锁定）
-        deleted = False
-        for _ in range(5):
-            try:
-                os.remove(model_name)
-                print("检测到损坏的模型文件，已删除")
-                deleted = True
-                break
-            except PermissionError:
-                time.sleep(1)
-        if not deleted:
-            # 删不掉就改名，避免阻塞后续下载
-            alt = model_name + "." + str(uuid.uuid4()) + ".bak"
-            try:
-                shutil.move(model_name, alt)
-                print(f"损坏的模型文件被占用，已重命名为 {{alt}}")
-            except Exception as e:
-                print(f"无法处理损坏的模型文件: {e}")
+# 校验并清理损坏的模型文件
+for fpath in (model_path, model_name):
+    if os.path.exists(fpath):
+        try:
+            with zipfile.ZipFile(fpath) as _zf:
+                pass
+        except zipfile.BadZipFile:
+            deleted = False
+            for _ in range(5):
+                try:
+                    os.remove(fpath)
+                    print("检测到损坏的模型文件，已删除")
+                    deleted = True
+                    break
+                except PermissionError:
+                    time.sleep(1)
+            if not deleted:
+                alt = fpath + "." + str(uuid.uuid4()) + ".bak"
+                try:
+                    shutil.move(fpath, alt)
+                    print(f"损坏的模型文件被占用，已重命名为 {alt}")
+                except Exception as e:
+                    print(f"无法处理损坏的模型文件: {e}")
 
 if not os.path.exists(model_path):
-    model = YOLO({self.pretrained_path!r})
+    model = YOLO(__pretrained__)
     if os.path.exists(model_name):
         shutil.move(model_name, model_path)
 else:
     model = YOLO(model_path)
 
 results = model.train(
-    data={self.data_yaml_path!r},
-    project=os.path.join({self.params["save_path"]!r}, "train"),
-    name={self.params["exp_name"]!r},
-    epochs={self.params["epochs"]},
-    batch={self.params["batch"]},
-    imgsz={self.params["imgsz"]},
-    device={self.params["device"]!r},
-    workers={self.params["workers"]},
-    lr0={self.params["lr0"]},
-    patience={self.params["patience"]},
-    verbose=True,
+    data=__data_yaml__,
+    project=os.path.join(__save_path__, "train"),
+    name=__exp_name__,
+    epochs=__epochs__, batch=__batch__, imgsz=__imgsz__,
+    device=__device__, workers=__workers__, lr0=__lr0__,
+    patience=__patience__, verbose=True,
 )
 print("__TRAIN_DONE__")
 metrics = model.val()
-print(f"__METRICS__ mAP50={{metrics.box.map50:.4f}} mAP50-95={{metrics.box.map:.4f}}")
+print(f"__METRICS__ mAP50={metrics.box.map50:.4f} mAP50-95={metrics.box.map:.4f}")
 save_dir = getattr(model.trainer, 'save_dir', '') if hasattr(model, 'trainer') else ''
 if save_dir:
     best = os.path.join(save_dir, "weights", "best.pt")
     if os.path.exists(best):
-        print(f"__BEST__{{best}}")
+        print(f"__BEST__{best}")
 print("__ALL_DONE__")
-'''
+""".replace("__pretrained__", repr(self.pretrained_path)) \
+ .replace("__save_path__", repr(p["save_path"])) \
+ .replace("__data_yaml__", repr(self.data_yaml_path)) \
+ .replace("__exp_name__", repr(p["exp_name"])) \
+ .replace("__epochs__", str(p["epochs"])) \
+ .replace("__batch__", str(p["batch"])) \
+ .replace("__imgsz__", str(p["imgsz"])) \
+ .replace("__device__", repr(p["device"])) \
+ .replace("__workers__", str(p["workers"])) \
+ .replace("__lr0__", str(p["lr0"])) \
+ .replace("__patience__", str(p["patience"]))
 
     def _on_stdout(self):
         """处理子进程的标准输出，合并 \r 进度更新到进度条。"""

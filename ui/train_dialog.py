@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QCheckBox, QWidget
 )
 from PySide6.QtCore import Qt, QObject, QProcess, Signal
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QTextCursor
 
 
 # ── 预置 YOLO 模型列表 ──
@@ -140,7 +140,7 @@ class TrainWorker(QObject):
 
     def _make_train_script(self):
         """生成训练用的 Python 脚本内容。"""
-        return f'''import sys, os, re, shutil
+        return f'''import sys, os, re, shutil, zipfile
 sys.stdout = sys.stderr  # 合并输出流便于捕获
 from ultralytics import YOLO
 
@@ -153,12 +153,20 @@ model_path = os.path.join(weights_dir, model_name)
 # 如果模型文件损坏（下载中断），自动删除重新下载
 if os.path.exists(model_path):
     try:
-        import zipfile
         with zipfile.ZipFile(model_path) as _zf:
             pass
     except zipfile.BadZipFile:
         os.remove(model_path)
-        print(f"检测到损坏的模型文件 {{model_name}}，自动删除重新下载...\n")
+        print("检测到损坏的模型文件，自动删除重新下载...\n")
+
+# 也检查工作目录中可能存在的损坏文件
+if os.path.exists(model_name):
+    try:
+        with zipfile.ZipFile(model_name) as _zf:
+            pass
+    except zipfile.BadZipFile:
+        os.remove(model_name)
+        print("检测到损坏的模型文件，已删除\n")
 
 if not os.path.exists(model_path):
     model = YOLO({self.pretrained_path!r})
@@ -476,7 +484,7 @@ class TrainDialog(QDialog):
 
     def _on_log(self, text):
         self.log_output.insertPlainText(text)
-        self.log_output.moveCursor(self.log_output.textCursor().End)
+        self.log_output.moveCursor(QTextCursor.End)
 
     def _on_finished(self, success, msg):
         self._is_training = False

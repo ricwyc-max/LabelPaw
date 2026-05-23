@@ -195,7 +195,7 @@ import torch as _torch
 _device = __device__
 if _device != "cpu" and not _torch.cuda.is_available():
     _device = "cpu"
-    print("CUDA 不可用，自动切换至 CPU 训练\n")
+    print("CUDA 不可用，自动切换至 CPU 训练")
 
 results = model.train(
     data=__data_yaml__,

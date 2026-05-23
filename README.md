@@ -81,6 +81,9 @@ The system is built on **PySide6** and integrates **SAM2**, **SAM3**, and **Ultr
 - **🔄 Ultimate OBB**: Custom drag handles with 360° smooth rotation.
 - **💾 Multi-Format Export**: JSON (LabelMe compatible), YOLO (.txt), XML (Pascal VOC). One-click U-Net mask generation.
 - **🗄️ Dataset Processing**: Format conversion and train/val/test splitting.
+- **🎯 YOLO Model Training**: Built-in training dialog with dataset validation, model download, and GPU/CPU training
+- **🔄 Transfer Learning**: Load pretrained models or previous training checkpoints to continue training
+- **⚙️ Full Training Controls**: Epochs, batch size, learning rate, optimizer (SGD/Adam/AdamW), augmentation (mosaic, mixup, HSV jitter, geometric transforms)
 - **🎨 Dual Theme**: Light and Dark themes.
 - **↩️ Undo/Redo**: 20-step history with full state snapshots.
 
@@ -179,6 +182,7 @@ weights/
 5. **YOLO Prediction** — Switch to any YOLO model via the model selector, click the ⚡ button
 6. **Keypoint/Skeleton** — Select keypoint mode, choose a built-in template or customize your own
 7. **Dataset Processing** — Click "Dataset Processing" for format conversion / splitting / U-Net mask generation
+8. **YOLO Model Training** — Click "模型训练" in the left toolbar to open the training dialog. Select your dataset directory (must contain `data.yaml`), choose a pretrained model or local checkpoint, configure hyperparameters, and click "开始训练". Training runs in a separate process with real-time log output and progress bar. The trained model (`best.pt`) is saved to `{save_path}/train/{exp_name}/`.
 
 ### ⌨️ Shortcuts
 
@@ -232,6 +236,7 @@ LabelPaw/
 │   ├── theme.py                   # Dark/Light theme QSS
 │   ├── template_dialog.py         # Skeleton template editor
 │   ├── model_selector_dialog.py   # Model picker dialog
+│   ├── train_dialog.py            # YOLO training dialog
 │   └── author_info.py             # About dialog
 ├── utils/
 │   └── message.py                 # Toast notification (DialogOver)
@@ -255,6 +260,7 @@ LabelPaw/
 | Date | Changes |
 |------|---------|
 | 2026-05-23 | Refactored UI to `.ui` + `pyside6-uic` pattern; added `.qrc` resource system |
+| 2026-05-23 | Added YOLO model training: dialog, hyperparameter config, GPU/CPU fallback, transfer learning |
 | 2026-05-22 | Fixed SAM3 triton DLL compatibility on Windows |
 | 2026-05-15 | Added face/hand/person keypoint templates; customizable skeleton connections |
 | 2026-05-14 | Integrated SAM2.1; integrated Ultralytics YOLO (detect/segment/pose/OBB) |
@@ -271,6 +277,12 @@ LabelPaw/
 
 **Q: SAM3 won't load / `triton` DLL error?**  
 A: On Windows, `import triton` must happen before `import PySide6`. This is already handled in `main.py`. If the error persists, try `pip install triton-windows`.
+
+**Q: Training fails with "CUDA unavailable" on a CUDA-capable system?**  
+A: QProcess subprocesses inherit the parent environment. Ensure CUDA paths are in your system PATH. The training script automatically falls back to CPU if CUDA is not detected in the subprocess.
+
+**Q: Training crashes with "page file too small"?**  
+A: Reduce the `workers` parameter (try 0 or 2). High worker counts cause multiple CUDA DLL loads that can exhaust Windows virtual memory.
 
 **Q: pyside6-uic not found?**  
 A: Run `pyside6-uic` via full path: `<venv>/Scripts/pyside6-uic.exe ui/main_window.ui -o ui/ui_main_window.py`

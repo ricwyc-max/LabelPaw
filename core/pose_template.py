@@ -667,6 +667,14 @@ DEFAULT_TEMPLATES = [
 ]
 
 class TemplateManager:
+    """骨架模板管理器，负责模板的加载、保存、增删查操作。
+
+    管理关键点骨架模板的完整生命周期：
+    - 从 JSON 配置文件目录加载预定义模板
+    - 提供内置默认模板（人体 COCO、手部、面部 68 点、矩形、三角形）
+    - 支持模板的添加（新增或覆盖）、查询、删除和持久化保存
+    - 每个模板包含关键点名称、颜色、默认位置和骨架连接关系
+    """
     def __init__(self, config_dir="core/config"):
         self.config_dir = config_dir
         self.templates = []
@@ -675,6 +683,11 @@ class TemplateManager:
         self.load()
 
     def load(self):
+        """从配置目录加载所有骨架模板。
+
+        读取配置目录下所有 .json 文件作为模板数据。
+        如果目录为空或加载失败，则使用内置默认模板并保存到磁盘。
+        """
         self.templates = []
         if os.path.exists(self.config_dir):
             for filename in os.listdir(self.config_dir):
@@ -692,10 +705,21 @@ class TemplateManager:
             self.save_all()
 
     def save_all(self):
+        """将所有模板保存到配置目录的 JSON 文件中。
+
+        遍历当前内存中的所有模板，逐个调用 save_single() 写入磁盘。
+        """
         for t in self.templates:
             self.save_single(t)
 
     def save_single(self, template):
+        """将单个模板保存为 JSON 文件。
+
+        以模板名称生成安全的文件名，保存到配置目录中。
+
+        Args:
+            template: 模板字典，需包含 "name" 键。
+        """
         name = template.get("name", "unknown").lower().replace(" ", "_")
         safe_name = "".join([c for c in name if c.isalnum() or c in ("_", "-")])
         filepath = os.path.join(self.config_dir, f"{safe_name}.json")
@@ -710,6 +734,14 @@ class TemplateManager:
         self.save_all()
 
     def add_template(self, template):
+        """添加或更新一个骨架模板。
+
+        如果模板名称已存在，则更新现有模板；否则新增模板。
+        添加后自动保存到磁盘。
+
+        Args:
+            template: 模板字典，需包含 "name" 键。
+        """
         for i, t in enumerate(self.templates):
             if t["name"] == template["name"]:
                 self.templates[i] = template
@@ -719,15 +751,38 @@ class TemplateManager:
         self.save_single(template)
 
     def get_template_names(self):
+        """获取所有模板的名称列表。
+
+        Returns:
+            模板名称字符串列表。
+        """
         return [t["name"] for t in self.templates]
 
     def get_template(self, name):
+        """根据名称获取骨架模板。
+
+        Args:
+            name: 模板名称。
+
+        Returns:
+            匹配的模板字典，未找到时返回 None。
+        """
         for t in self.templates:
             if t["name"] == name:
                 return t
         return None
 
     def delete_template(self, name):
+        """删除指定名称的骨架模板。
+
+        同时从内存列表和磁盘文件中删除该模板。
+
+        Args:
+            name: 要删除的模板名称。
+
+        Returns:
+            bool: 删除成功返回 True，未找到对应模板返回 False。
+        """
         for i, t in enumerate(self.templates):
             if t["name"] == name:
                 # Remove file

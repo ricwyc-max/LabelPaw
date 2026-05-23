@@ -28,6 +28,12 @@ from PySide6.QtCore import QPoint
 
 
 class DatasetWorker(QThread):
+    """数据集处理异步工作线程。
+
+    在后台线程中执行数据集的格式转换、划分和导出操作，
+    通过信号将日志和完成状态通知主线程。
+    支持四种模式：YOLO 纯划分、JSON/XML 转 YOLO、JSON 转 U-Net 掩码、YOLO 分割转 U-Net。
+    """
     log_signal = Signal(str)
     finish_signal = Signal(bool, str)  # 完成信号
 
@@ -40,9 +46,11 @@ class DatasetWorker(QThread):
         self.train_r, self.val_r, self.test_r = ratios
 
     def log(self, msg):
+        """通过信号发送日志消息到主线程。"""
         self.log_signal.emit(msg)
 
     def run(self):
+        """线程主入口：根据选择的模式执行对应的数据集处理逻辑。"""
         try:
             self.log(f"🚀 开始任务...")
             self.log(f"📁 图片目录: {self.img_dir}")
@@ -65,6 +73,8 @@ class DatasetWorker(QThread):
             self.finish_signal.emit(False, str(e))
 
     def get_valid_pairs(self, exts, label_exts, use_json_xml_mix=False):
+        """扫描图片目录和标签目录，返回有效的图片-标签配对列表。"""
+
         valid_pairs = []
         for filename in os.listdir(self.img_dir):
             if filename.lower().endswith(exts):
@@ -87,6 +97,7 @@ class DatasetWorker(QThread):
         return valid_pairs
 
     def split_data(self, valid_pairs):
+        """将数据按指定比例随机划分为训练集、验证集和测试集。"""
         random.shuffle(valid_pairs)
         total = len(valid_pairs)
         
@@ -173,6 +184,8 @@ class DatasetWorker(QThread):
 
     # ------------------ 生成 data.yaml ------------------
     def generate_yaml(self, class_map):
+        """生成 YOLO 训练所需的 data.yaml 配置文件，包含路径、类别和关键点信息。"""
+
         is_pose = getattr(self, 'is_pose_dataset', False)
         filename = "data-pose.yaml" if is_pose else "data.yaml"
         yaml_path = os.path.join(self.out_dir, filename)
@@ -575,6 +588,15 @@ class RatioDialog(QDialog):
 
 
 class DatasetToolWindow(QMainWindow):
+    """数据集处理工具主窗口。
+
+    提供图形化界面，支持四种数据集处理模式：
+    - 模式一：YOLO 格式数据集的纯划分
+    - 模式二：JSON/XML 标注文件转换为 YOLO 格式并划分
+    - 模式三：JSON 标注文件转换为 U-Net 掩码格式
+    - 模式四：YOLO 分割标注转换为 U-Net 掩码格式
+    支持自定义训练/验证/测试集的划分比例。
+    """
     def __init__(self):
         super().__init__()
         self.setWindowTitle("LabelPaw - 数据集处理系统")
@@ -767,10 +789,12 @@ class DatasetToolWindow(QMainWindow):
         main_layout.addWidget(self.console, 1)
 
     def select_dir(self, line_edit):
+        """弹出目录选择对话框并将选定路径填入对应的输入框。"""
         d = QFileDialog.getExistingDirectory(self, "选择目录")
         if d: line_edit.setText(d)
 
     def open_ratio_dialog(self):
+        """弹出比例设置对话框，允许用户调整训练/验证/测试集的划分比例。"""
         dlg = RatioDialog(self.ratios, self)
         if dlg.exec():
             self.ratios = dlg.ratios
@@ -781,16 +805,19 @@ class DatasetToolWindow(QMainWindow):
             self.ratio_btn.setText(txt)
 
     def append_log(self, text):
+        """向控制台追加日志文本并滚动到末尾。"""
         self.console.append(text)
         self.console.moveCursor(QTextCursor.End)
 
     def trigger_message(self, text, title, status):
+        """弹出通知消息，优先使用 DialogOver 否则使用 QMessageBox 兜底。"""
         if DialogOver:
             DialogOver(self, text, title, status)
         else:
             QMessageBox.information(self, title, text)
 
     def start_processing(self):
+        """启动数据集处理任务，验证输入后创建 DatasetWorker 在后台执行。"""
         img_dir = self.img_input.text().strip()
         out_dir = self.out_input.text().strip()
         ann_dir = self.ann_input.text().strip()
@@ -812,6 +839,7 @@ class DatasetToolWindow(QMainWindow):
         self.worker.start()
 
     def on_process_finish(self, success, msg):
+        """数据集处理完成后的回调，恢复按钮状态并显示结果通知。"""
         self.start_btn.setEnabled(True)
         self.start_btn.setText("🚀 开始执行转换与划分")
         if success:

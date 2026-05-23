@@ -40,6 +40,13 @@ from core.yolo_predictor import YoloPredictorWorker
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
+    """标注工具主窗口，是 LabelPaw 的核心控制器。
+
+    负责统筹管理图像显示、标注绘制、格式导入导出、SAM 模型推理、
+    YOLO 预测、骨架模板管理、撤销/重做、主题切换等功能模块。
+    通过信号-槽机制连接各组件，实现整体交互逻辑。
+    """
+
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -102,7 +109,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.btnPredict.setIcon(QIcon(self.predict_movie.currentPixmap()))
 
     def _apply_initial_setup(self):
-        """UI 初始化：图标着色、ActionGroup、按钮样式等（.ui 无法表达的部分）"""
+        """UI 后初始化配置。处理 .ui 文件无法表达的动态设置，如图标着色、ActionGroup 互斥、侧边栏按钮初始化等。"""
         from PySide6.QtWidgets import QSizePolicy
         from PySide6.QtCore import Qt
         from PySide6.QtGui import QIcon, QColor, QPixmap, QFont, QActionGroup
@@ -206,6 +213,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         dialog.exec()
 
     def on_model_selected(self, model_info_or_key):
+        """处理模型切换事件。根据 SAM / YOLO / 其他模型类型执行不同的加载和 UI 调整逻辑。"""
         if isinstance(model_info_or_key, str):
             key = model_info_or_key
             if key in SAM_MODEL_MAP:
@@ -295,6 +303,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.templateWidget._on_template_selected("Person (COCO)", "Person (COCO) ▾")
 
     def _connect_signals(self):
+        """连接所有信号-槽，建立各组件之间的通信关系。"""
         self.templateWidget.edit_template.connect(self.edit_pose_template)
         self.templateWidget.delete_template.connect(self.delete_pose_template)
         self.btnAuthorInfo.clicked.connect(self.show_author_info)
@@ -540,7 +549,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.listClasses.addItem(item)
 
     def push_state(self):
-        """把当前画布状态拍个快照，存进撤销堆栈"""
+        """将当前画布状态快照存入撤销栈（用于撤销/重做）。重复状态不会重复入栈以节约内存。"""
         if not self.current_image_path: return
         current_state = Exporter.extract_shapes(self.scene)
 
@@ -560,7 +569,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.update_undo_redo_buttons()
 
     def undo(self):
-        """撤销 (Ctrl+Z)"""
+        """撤销操作：将当前状态推入重做栈，恢复到上一步的快照。"""
         if len(self.undo_stack) > 1:
             # 把现在的状态拿出来，放到重做栈里去
             current_state = self.undo_stack.pop()
@@ -571,7 +580,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.update_undo_redo_buttons()
 
     def redo(self):
-        """重做/前进 (Ctrl+Y 或 Ctrl+Shift+Z)"""
+        """重做操作：从重做栈取出状态恢复到画布上。"""
         if self.redo_stack:
             # 从重做栈里拿出来，塞回撤销栈
             next_state = self.redo_stack.pop()
@@ -591,7 +600,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.btnRedo.setIcon(self.set_icon_color(QIcon(":/icon/arrow-u-up-right.svg"), self.current_icon_color))
 
     def restore_state(self, state):
-        """根据快照数据，完全重建画板元素"""
+        """根据快照数据完全重建画布上的所有标注元素（撤销/重做的核心恢复逻辑）。"""
         
         # 记录当前选中状态以便恢复
         selected_labels_or_poses = []
@@ -746,6 +755,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.scene.state_changed.emit()
 
     def toggle_sidebar(self):
+        """切换侧边栏的展开/折叠状态。折叠时只显示图标，展开时显示文字+图标。"""
         if self.toolBar.toolButtonStyle() == Qt.ToolButtonTextBesideIcon:
             # 隐藏文字 — 收缩模式
             self.toolBar.setToolButtonStyle(Qt.ToolButtonIconOnly)
@@ -828,6 +838,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return new_icon
 
     def toggle_theme(self):
+        """切换深色/浅色主题，同时更新所有图标的颜色以适配当前主题。"""
         self.is_dark_theme = not self.is_dark_theme
         if self.is_dark_theme:
             self.setStyleSheet(DARK_THEME)
@@ -879,6 +890,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         dialog.exec()
 
     def show_help_dialog(self):
+        """显示快捷键帮助对话框，包含所有键盘快捷键和操作技巧说明。"""
         help_text = """
         <h3>【快捷键大全】</h3>
         <ul>
@@ -1215,6 +1227,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.listClasses.blockSignals(False)
 
     def open_dir(self):
+        """打开目录选择对话框，加载所选目录中的图片文件和类别列表。"""
         dir_path = QFileDialog.getExistingDirectory(self, "选择图片目录")
         if dir_path:
             self.current_dir = dir_path
@@ -1326,6 +1339,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.statusBar.showMessage(f"成功删除 {deleted_count} 个文件", 3000)
 
     def on_file_selected(self, current, previous):
+        """文件列表选中项变化时的处理：自动保存当前标注，加载新图片及其标注数据。"""
         if previous:
             self.auto_save_annotation()
 
@@ -1394,6 +1408,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         DialogOver(self, f"当前保存及读取格式变为 {format_type.upper()}", "格式切换", "info")
 
     def load_annotations(self, image_path):
+        """根据当前选中的格式加载图片的标注文件并还原到画布上。"""
         if not self.scene.img_item: return
 
         img_w = self.scene.img_item.pixmap().width()
@@ -1577,6 +1592,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print(f"加载 XML 标注失败: {e}")
 
     def save_annotation(self, format_type):
+        """将当前画布上的标注数据保存为指定格式的文件（JSON / YOLO / XML）。"""
         if not self.current_image_path or not self.scene.img_item:
             QMessageBox.warning(self, "提示", "请先打开图片")
             DialogOver(self, "请先在左侧树形目录中打开图片", "操作错误", "warning")

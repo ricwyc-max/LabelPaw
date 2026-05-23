@@ -7,6 +7,11 @@ from PySide6.QtGui import QAction, QActionGroup, QPainter, QColor, QFont, QIcon,
 
 
 class FormatSelectorWidget(QWidget):
+    """标注格式选择器组件，提供 JSON / YOLO / XML 三种标注格式的下拉切换。
+
+    通过 QPushButton + QMenu 实现简洁的格式切换交互，
+    切换后通过 format_changed 信号通知外部当前选中的格式。
+    """
     format_changed = Signal(str)
 
     def __init__(self, parent=None):
@@ -47,15 +52,18 @@ class FormatSelectorWidget(QWidget):
         self.act_xml.triggered.connect(lambda: self._on_format_selected("xml", "　XML 格式 ▾"))
 
     def _on_format_selected(self, fmt, text):
+        """内部处理格式选择事件，更新按钮文字并发射信号。"""
         self.btn.setText(text)
         self.format_changed.emit(fmt)
 
     def set_yolo_enabled(self, enabled):
+        """启用或禁用 YOLO 格式选项。在骨架标注模式下可强制禁用。"""
         self.act_yolo.setEnabled(enabled)
         if not enabled and self.btn.text().strip() == "YOLO 格式 ▾":
             self._on_format_selected("json", "　JSON 格式 ▾")
 
     def set_format(self, fmt):
+        """外部设置当前格式并更新按钮显示文字。"""
         if fmt == "json":
             self.btn.setText("　JSON 格式 ▾")
         elif fmt == "yolo":
@@ -64,6 +72,7 @@ class FormatSelectorWidget(QWidget):
             self.btn.setText("　XML 格式 ▾")
             
     def set_icon_only(self, icon_only):
+        """切换为纯图标模式（侧边栏折叠时使用），隐藏文字并固定按钮大小。"""
         if icon_only:
             # 记住当前文字以便恢复
             self._cached_text = self.btn.text()
@@ -95,6 +104,11 @@ class FormatSelectorWidget(QWidget):
 
 
 class TemplateSelectorWidget(QWidget):
+    """骨架模板选择器组件，提供动态下拉菜单以选择和编辑骨架模板。
+
+    支持固定模板（Person (COCO)、Hand、Face 等）和用户自定义模板的切换。
+    内置编辑和删除按钮，用于管理自定义模板。
+    """
     template_changed = Signal(str)
 
     edit_template = Signal(str)
@@ -121,6 +135,7 @@ class TemplateSelectorWidget(QWidget):
         layout.addWidget(self.btn)
 
     def update_templates(self, templates, main_window=None):
+        """刷新模板下拉菜单列表。固定模板显示为简单菜单项，自定义模板附带编辑和删除按钮。"""
         self.menu.clear()
         
         fixed_templates = ["Person (COCO)", "Hand", "Face (68 pts)", "Rectangle", "Triangle"]
@@ -182,15 +197,22 @@ class TemplateSelectorWidget(QWidget):
         self.menu.addAction(act_new)
 
     def _on_template_selected(self, template_name, btn_text):
+        """内部处理模板选择事件，更新按钮文字并发射信号。"""
         if template_name != "+ New Template...":
             self.btn.setText(btn_text)
         self.template_changed.emit(template_name)
         
     def set_current_template_text(self, text):
+        """外部设置当前选中的模板名称。"""
         self.btn.setText(f"{text} ▾")
 
 
 class SwitchControl(QWidget):
+    """自定义绘制的开关控件，模拟 iOS 风格的开/关切换。
+
+    支持横向和竖向两种模式，通过 QPainter 绘制圆角矩形背景和圆形滑块。
+    状态改变时发射 toggled 信号。
+    """
     toggled = Signal(bool)
 
     def __init__(self, parent=None):
@@ -201,20 +223,24 @@ class SwitchControl(QWidget):
         self._vertical = False  # 竖向模式
 
     def isChecked(self):
+        """返回当前开关是否处于打开状态。"""
         return self._checked
 
     def setChecked(self, checked):
+        """设置开关状态，若状态发生变化则发射 toggled 信号并重绘。"""
         if self._checked != checked:
             self._checked = checked
             self.toggled.emit(checked)
             self.update()
 
     def mouseReleaseEvent(self, event):
+        """点击开关时切换状态。"""
         if event.button() == Qt.LeftButton:
             self.setChecked(not self._checked)
         super().mouseReleaseEvent(event)
 
     def paintEvent(self, event):
+        """重写绘制事件，用 QPainter 自定义渲染开关外观。"""
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         rect = QRect(0, 0, self.width(), self.height())
@@ -245,6 +271,13 @@ class SwitchControl(QWidget):
 
 
 class CanvasView(QGraphicsView):
+    """自定义画布视图，支持缩放和平移操作。
+
+    - Ctrl + 滚轮：缩放到鼠标所在位置
+    - 中键拖拽：平移画布
+    - 普通滚轮：在放大状态下滚动浏览画布
+    """
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setRenderHint(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
@@ -261,6 +294,7 @@ class CanvasView(QGraphicsView):
         self._pan_start_pos = None
 
     def wheelEvent(self, event):
+        """处理滚轮事件：按住 Ctrl 时缩放画布，否者进行滚动浏览。"""
         if event.modifiers() & Qt.ControlModifier:
             # Ctrl + 滚轮：缩放
             zoom_in_factor = 1.15
@@ -283,6 +317,7 @@ class CanvasView(QGraphicsView):
                 )
 
     def mousePressEvent(self, event):
+        """鼠标中键按下时进入平移模式。"""
         if event.button() == Qt.MiddleButton:
             self._is_panning = True
             self._pan_start_pos = event.position().toPoint()
@@ -292,6 +327,7 @@ class CanvasView(QGraphicsView):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
+        """鼠标移动事件：平移模式下根据鼠标位移滚动画布。"""
         if self._is_panning:
             delta = event.position().toPoint() - self._pan_start_pos
             self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
@@ -302,6 +338,7 @@ class CanvasView(QGraphicsView):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        """鼠标中键释放时退出平移模式。"""
         if event.button() == Qt.MiddleButton:
             self._is_panning = False
             self.viewport().setCursor(Qt.CrossCursor)

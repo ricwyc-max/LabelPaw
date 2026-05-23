@@ -3,15 +3,19 @@ from PySide6.QtCore import QPointF
 
 
 def point_to_segment_dist(pt, p1, p2):
-    """计算点到线段的距离和投影点
-    
+    """计算点到线段的最短距离和垂足投影点。
+
+    使用参数化直线方程计算点到线段的投影位置，
+    并将投影点约束在线段范围内（参数 t 限制在 [0, 1] 区间）。
+    若线段退化为点（p1 == p2），则直接返回点到 p1 的距离。
+
     Args:
-        pt: 点
-        p1: 线段起点
-        p2: 线段终点
-        
+        pt: 目标点（QPointF）。
+        p1: 线段起点（QPointF）。
+        p2: 线段终点（QPointF）。
+
     Returns:
-        (距离, 投影点)
+        tuple: (最短距离, 投影点 QPointF)。
     """
     dx = p2.x() - p1.x()
     dy = p2.y() - p1.y()
@@ -28,14 +32,18 @@ def point_to_segment_dist(pt, p1, p2):
 
 
 def point_in_polygon(pt, polygon):
-    """判断点是否在多边形内（射线法）
-    
+    """判断点是否在多边形内部（射线法 / Ray Casting Algorithm）。
+
+    从目标点向右发射水平射线，统计与多边形边的交点数。
+    若交点为奇数，则点在多边形内部；偶数为外部。
+    适用于凸多边形和凹多边形。
+
     Args:
-        pt: 点
-        polygon: 多边形顶点列表
-        
+        pt: 目标点（QPointF）。
+        polygon: 多边形顶点列表（list of QPointF）。
+
     Returns:
-        bool: 点是否在多边形内
+        bool: 点在多边形内返回 True，否则返回 False。
     """
     x, y = pt.x(), pt.y()
     inside = False

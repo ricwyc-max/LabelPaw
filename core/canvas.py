@@ -6,6 +6,15 @@ from core.shapes import RectShape, PolyShape, PointShape, RotatedRectShape, Hand
 
 
 class CanvasMode:
+    """画布绘制模式枚举类。
+
+    定义标注工具支持的所有绘制模式：
+        EDIT (0): 编辑模式，用于选择和操作已有的标注图形。
+        RECT (1): 矩形标注模式，绘制轴对齐的矩形框。
+        POLY (2): 多边形标注模式，通过连续点击顶点绘制任意多边形。
+        POINT (3): 关键点标注模式，用于放置骨架关键点或单点标注。
+        RBOX (4): 旋转矩形（OBB）标注模式，绘制带旋转角度的矩形框。
+    """
     EDIT = 0
     RECT = 1
     POLY = 2
@@ -19,6 +28,16 @@ class CanvasMode:
 
 
 class Canvas(QGraphicsScene):
+    """标注画布场景，管理所有标注图形和绘制交互。
+
+    作为 QGraphicsScene 的子类，Canvas 负责：
+    - 管理图片加载与显示
+    - 处理鼠标事件以实现绘制、编辑和选择操作
+    - 管理标注图形的增删改查
+    - 支持 SAM (Segment Anything Model) 智能辅助标注
+    - 支持骨架关键点（Pose）模板的预览与放置
+    - 显示十字准星辅助线
+    """
     mouse_moved = Signal(int, int)
     shape_drawn = Signal(object)
     shape_double_clicked = Signal(object)
@@ -54,6 +73,14 @@ class Canvas(QGraphicsScene):
         self.addItem(self.v_line)
 
     def load_image(self, path):
+        """加载图片到画布中。
+
+        清除已有标注图形，加载指定路径的图片，并设置场景矩形为图片大小。
+        同时显示十字准星辅助线。
+
+        Args:
+            path: 图片文件的路径。
+        """
         self.clear_shapes()
         pixmap = QPixmap(path)
         if self.img_item:
@@ -65,6 +92,11 @@ class Canvas(QGraphicsScene):
         self.v_line.show()
 
     def clear_shapes(self):
+        """清除画布上所有标注图形。
+
+        遍历画布中的所有图形项，移除 RectShape、PolyShape、PointShape、
+        RotatedRectShape 和 PoseShape 类型的标注图形，同时清理临时预览项的引用。
+        """
         # Clear all shape items from the canvas
         for item in self.items():
             if isinstance(item, (RectShape, PolyShape, PointShape, RotatedRectShape, PoseShape)):
@@ -76,12 +108,27 @@ class Canvas(QGraphicsScene):
                 self.removeItem(item)
 
     def set_mode(self, mode):
+        """设置画布的绘制模式。
+
+        切换标注模式时自动取消正在进行的绘制操作，
+        并清除当前所有选中项的选择状态。
+
+        Args:
+            mode: 绘制模式，应为 CanvasMode 枚举值之一。
+        """
         self.mode = mode
         self.cancel_drawing()
         for item in self.selectedItems():
             item.setSelected(False)
 
     def set_sam_enabled(self, enabled):
+        """启用或禁用 SAM 智能辅助标注功能。
+
+        当禁用 SAM 时，自动移除当前的 SAM 悬停预览图形。
+
+        Args:
+            enabled: True 表示启用 SAM 辅助标注，False 表示禁用。
+        """
         self.sam_enabled = enabled
         if not enabled and self.sam_hover_item:
             self.removeItem(self.sam_hover_item)
@@ -98,6 +145,14 @@ class Canvas(QGraphicsScene):
         return QPointF(x, y)
 
     def update_crosshair(self, pt):
+        """更新十字准星辅助线的位置。
+
+        根据鼠标当前坐标，在画布上绘制水平和垂直两条虚线，
+        帮助用户精确定位标注位置。同时发射 mouse_moved 信号。
+
+        Args:
+            pt: 鼠标当前场景坐标（QPointF）。
+        """
         if self.img_item:
             rect = self.sceneRect()
             x = max(rect.left(), min(pt.x(), rect.right()))
@@ -107,6 +162,18 @@ class Canvas(QGraphicsScene):
             self.mouse_moved.emit(int(x), int(y))
 
     def mouseMoveEvent(self, event):
+        """鼠标移动事件处理。
+
+        根据当前绘制模式执行不同操作：
+        - 更新十字准星位置
+        - 在 POINT 模式下预览骨架模板
+        - 在 SAM 启用时请求智能辅助推理
+        - 在 RECT/RBOX 模式下实时显示拖拽过程中的临时矩形
+        - 在 POLY 模式下更新多边形的临时预览边
+
+        Args:
+            event: 鼠标事件对象。
+        """
         pt = event.scenePos()
         self.update_crosshair(pt)
         super().mouseMoveEvent(event)
@@ -180,7 +247,22 @@ class Canvas(QGraphicsScene):
             self.update_temp_poly(mouse_pos=clamped_pt)
 
     def handle_sam_result(self, poly_pts, rect_xywh, rect_obb, score, is_click):
-        """处理来自 SAM 后台的推理结果，正确区分矩形、多边形和旋转框"""
+        """处理 SAM 模型的推理结果并渲染到画布上。
+
+        根据当前绘制模式将 SAM 推理结果渲染为对应类型的图形：
+        - RECT 模式：渲染为矩形框
+        - POLY 模式：渲染为多边形轮廓
+        - RBOX 模式：渲染为旋转矩形（OBB）
+        如果是点击确认（is_click=True），则发射 shape_drawn 信号生成最终标注；
+        如果是悬停预览（is_click=False），则创建临时预览图形。
+
+        Args:
+            poly_pts: 多边形顶点列表。
+            rect_xywh: 矩形参数 [x, y, w, h]。
+            rect_obb: 旋转矩形参数 [cx, cy, w, h, angle]。
+            score: 推理置信度分数。
+            is_click: True 表示点击确认生成标注，False 表示悬停预览。
+        """
         # 支持 RBOX
         if not self.sam_enabled or self.mode not in [CanvasMode.RECT, CanvasMode.POLY, CanvasMode.RBOX]:
             return
@@ -230,9 +312,22 @@ class Canvas(QGraphicsScene):
                 self.addItem(self.sam_hover_item)
 
     def mousePressEvent(self, event):
+        """鼠标按下事件处理。
+
+        根据当前模式和点击位置执行不同操作：
+        - SAM 启用时：发送点击坐标请求 SAM 推理生成标注
+        - 点击已有标注图形：处理选中/编辑逻辑（支持手柄拖拽和骨架编辑）
+        - 点击空白处：取消所有选中状态
+        - RECT/RBOX 模式：开始绘制新图形，记录起始点
+        - POINT 模式：放置骨架模板或单点标注
+        - POLY 模式：添加多边形顶点，检测闭合条件
+
+        Args:
+            event: 鼠标事件对象。
+        """
         pt = event.scenePos()
         clamped_pt = self.clamp_point(pt)
-        
+
         is_yolo = getattr(self.sam_client, 'current_model_key', '').startswith('yolo')
 
         # ---------------- SAM 确认生成 ----------------
@@ -342,6 +437,15 @@ class Canvas(QGraphicsScene):
                 self.finish_poly_shape()
 
     def mouseReleaseEvent(self, event):
+        """鼠标释放事件处理。
+
+        当鼠标释放时，结束当前绘图拖拽操作。
+        如果拖拽产生的矩形尺寸大于阈值（5x5），
+        则根据当前模式生成 RectShape 或 RotatedRectShape 标注图形。
+
+        Args:
+            event: 鼠标事件对象。
+        """
         super().mouseReleaseEvent(event)
         if self.sam_enabled: return
 
@@ -366,6 +470,14 @@ class Canvas(QGraphicsScene):
         self.state_changed.emit()
 
     def mouseDoubleClickEvent(self, event):
+        """鼠标双击事件处理。
+
+        检测双击位置的标注图形，发射 shape_double_clicked 信号以打开编辑对话框。
+        在 POLY 模式下双击可结束多边形绘制。
+
+        Args:
+            event: 鼠标事件对象。
+        """
         pt = event.scenePos()
         if not self.is_inside_image(pt): return
 
@@ -394,6 +506,14 @@ class Canvas(QGraphicsScene):
             super().mouseDoubleClickEvent(event)
 
     def update_temp_poly(self, mouse_pos=None):
+        """更新多边形绘制的临时预览图形。
+
+        在当前已添加的顶点和鼠标当前位置之间绘制实时的预览线段，
+        帮助用户在闭合多边形前看到完整形状。
+
+        Args:
+            mouse_pos: 当前鼠标位置（QPointF），为 None 时仅显示已有顶点。
+        """
         display_pts = self.poly_pts.copy()
         if mouse_pos is not None: display_pts.append(mouse_pos)
         if len(display_pts) < 2:
@@ -407,6 +527,11 @@ class Canvas(QGraphicsScene):
             self.addItem(self.temp_item)
 
     def finish_poly_shape(self):
+        """完成多边形绘制并生成标注图形。
+
+        将当前收集的多边形顶点列表转换为 PolyShape 对象，
+        清除临时预览图形和顶点缓存，发射 shape_drawn 信号。
+        """
         shape = PolyShape(QPolygonF(self.poly_pts))
         self.poly_pts.clear()
         if self.temp_item:
@@ -415,6 +540,11 @@ class Canvas(QGraphicsScene):
         self.shape_drawn.emit(shape)
 
     def cancel_drawing(self):
+        """取消当前正在进行的绘制操作。
+
+        重置绘制状态，清除所有临时图形（包括多边形顶点、临时矩形、
+        SAM 悬停预览和骨架预览），释放相关资源。
+        """
         self.drawing = False
         self.poly_pts.clear()
         if self.temp_item:

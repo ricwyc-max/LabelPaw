@@ -41,6 +41,11 @@ else:
     MODEL_BASE_DIR = LOCAL_WEIGHTS_DIR  # 默认指向项目下的 weights
 
 def get_sam_model_map():
+    """扫描权重目录下的 .pt 文件，自动识别 SAM 2 / SAM 3 模型并构建配置映射表。
+
+    根据文件名中的关键字（如 sam3、tiny、small、large 等）自动匹配对应的
+    类型和配置文件，返回一个以模型名称为键的配置字典。
+    """
     sam_weights_dir = os.path.join(MODEL_BASE_DIR, "sam_weights")
     model_map = {}
     
@@ -90,9 +95,15 @@ def get_sam_model_map():
     return model_map
 
 SAM_MODEL_MAP = get_sam_model_map()
+"""全局 SAM 模型配置映射表，键为模型名称，值为包含权重路径、类型和支持特性等信息的字典。"""
 
 # ============== SAM 3 Workers ==============
 class Sam3ModelLoadWorker(QThread):
+    """SAM 3 模型加载工作线程。
+
+    在后台线程中加载 SAM 3 模型权重，避免阻塞主线程 UI。
+    加载完成后通过 loaded 信号返回模型实例和处理器实例。
+    """
     loaded = Signal(object, object, bool, str)
 
     def __init__(self, checkpoint_path):
@@ -100,6 +111,7 @@ class Sam3ModelLoadWorker(QThread):
         self.checkpoint_path = checkpoint_path
 
     def run(self):
+        """线程主入口：在后台线程中加载 SAM 3 模型（延迟导入避免 triton DLL 冲突）。"""
         try:
             # 在 QThread 内部延迟导入，避免 triton DLL 问题影响模块整体加载
             from sam3.model_builder import build_sam3_image_model
@@ -115,6 +127,13 @@ class Sam3ModelLoadWorker(QThread):
 
 
 class Sam3InferenceWorker(QThread):
+    """SAM 3 推理工作线程。
+
+    在后台线程中持续监听任务队列，支持两种推理类型：
+    - point: 基于点击坐标的分割推理（单点或多点）
+    - text: 基于文本提示词的全图目标提取推理（如 "dog"）
+    通过信号将推理结果返回主线程。
+    """
     result_ready = Signal(list, list, list, float, bool)
     text_result_ready = Signal(list, str)
 
@@ -127,6 +146,7 @@ class Sam3InferenceWorker(QThread):
         self.running = True
 
     def run(self):
+        """线程主入口：循环监听任务队列，处理点推理和文本推理任务。"""
         while self.running:
             try:
                 task_type, data, is_click = self.task_queue.get(timeout=0.05)
@@ -225,6 +245,7 @@ class Sam3InferenceWorker(QThread):
                 print(f"SAM3 推理错误: {e}")
 
     def request_inference(self, x, y, is_click=False):
+        """请求基于坐标点的分割推理：清空队列后将新任务入队。"""
         while not self.task_queue.empty():
             try:
                 self.task_queue.get_nowait()
@@ -233,6 +254,7 @@ class Sam3InferenceWorker(QThread):
         self.task_queue.put(('point', (x, y), is_click))
 
     def request_text_inference(self, prompt_text):
+        """请求基于文本提示词的全图目标提取推理。"""
         while not self.task_queue.empty():
             try:
                 self.task_queue.get_nowait()
@@ -241,12 +263,18 @@ class Sam3InferenceWorker(QThread):
         self.task_queue.put(('text', prompt_text, True))
 
     def stop(self):
+        """停止推理线程。"""
         self.running = False
         self.wait()
 
 
 # ============== SAM 2.1 Workers ==============
 class Sam2ModelLoadWorker(QThread):
+    """SAM 2.1 模型加载工作线程。
+
+    在后台线程中加载 SAM 2.1 模型权重和配置文件，
+    加载完成后通过 loaded 信号返回预测器实例。
+    """
     loaded = Signal(object, bool, str)
 
     def __init__(self, config_file, checkpoint_path):
@@ -255,6 +283,7 @@ class Sam2ModelLoadWorker(QThread):
         self.checkpoint_path = checkpoint_path
 
     def run(self):
+        """线程主入口：在后台线程中加载 SAM 2.1 模型。"""
         try:
             model = build_sam2(self.config_file, ckpt_path=self.checkpoint_path, device="cuda")
             predictor = SAM2ImagePredictor(model)
@@ -264,7 +293,11 @@ class Sam2ModelLoadWorker(QThread):
 
 
 class Sam2InferenceWorker(QThread):
-    """SAM 2.1 推理 Worker — 仅支持点击分割，不支持文本提示词"""
+    """SAM 2.1 推理工作线程。
+
+    仅支持基于点击坐标的分割推理，不支持文本提示词。
+    在后台线程中监听任务队列，处理点击推理任务并通过信号返回结果。
+    """
     result_ready = Signal(list, list, list, float, bool)
 
     def __init__(self):
@@ -275,6 +308,7 @@ class Sam2InferenceWorker(QThread):
         self.running = True
 
     def run(self):
+        """线程主入口：循环监听任务队列，处理点击推理任务。"""
         while self.running:
             try:
                 task_type, data, is_click = self.task_queue.get(timeout=0.05)
@@ -322,6 +356,7 @@ class Sam2InferenceWorker(QThread):
                 print(f"SAM2 推理错误: {e}")
 
     def request_inference(self, x, y, is_click=False):
+        """请求基于坐标点的分割推理：清空队列后将新任务入队。"""
         while not self.task_queue.empty():
             try:
                 self.task_queue.get_nowait()
@@ -330,12 +365,19 @@ class Sam2InferenceWorker(QThread):
         self.task_queue.put(('point', (x, y), is_click))
 
     def stop(self):
+        """停止推理线程。"""
         self.running = False
         self.wait()
 
 
 # ============== Unified SAM Client ==============
 class SAMClient(QObject):
+    """统一的 SAM 客户端，封装 SAM 2 和 SAM 3 模型的加载、推理和生命周期管理。
+
+    自动识别模型类型（sam2 / sam3），管理对应的加载 worker 和推理 worker，
+    提供统一的 set_image、request_inference、request_text_inference 接口。
+    通过信号将模型状态和推理结果回调给主线程。
+    """
     model_status_changed = Signal(bool, str)
     inference_result = Signal(list, list, list, float, bool)
     text_result_ready = Signal(list, str)
@@ -357,7 +399,7 @@ class SAMClient(QObject):
         self.load_worker = None
 
     def load_model_by_key(self, model_key):
-        """通过 key 从 SAM_MODEL_MAP 中选择并加载模型"""
+        """通过模型 key 从 SAM_MODEL_MAP 中选择并加载对应模型，避免重复加载。"""
         if model_key not in SAM_MODEL_MAP:
             self.model_status_changed.emit(False, f"未知模型: {model_key}")
             return
@@ -395,7 +437,7 @@ class SAMClient(QObject):
 
     # 兼容旧接口
     def load_model_async(self, checkpoint_path):
-        """向后兼容：直接加载 SAM3 模型"""
+        """向后兼容方法：直接加载指定路径的 SAM 3 模型。"""
         self.current_model_key = "sam3"
         self.current_model_type = "sam3"
         self._stop_active_worker()
@@ -405,7 +447,7 @@ class SAMClient(QObject):
         self.load_worker.start()
 
     def _stop_active_worker(self):
-        """停止当前的推理 worker"""
+        """停止当前正在运行的推理 worker 并清理资源。"""
         if self._sam3_worker:
             self._sam3_worker.stop()
             self._sam3_worker = None
@@ -415,6 +457,7 @@ class SAMClient(QObject):
         self._active_worker = None
 
     def _on_sam3_loaded(self, model, processor, success, msg):
+        """SAM 3 模型加载完成后的回调：创建推理线程并连接信号。"""
         if success:
             self.model = model
             self.processor = processor
@@ -429,6 +472,7 @@ class SAMClient(QObject):
         self.model_status_changed.emit(success, msg)
 
     def _on_sam2_loaded(self, predictor, success, msg):
+        """SAM 2 模型加载完成后的回调：创建推理线程并连接信号。"""
         if success:
             self.model = predictor
             self.processor = None  # SAM2 没有文本处理器
@@ -441,7 +485,7 @@ class SAMClient(QObject):
         self.model_status_changed.emit(success, msg)
 
     def set_image(self, image_path):
-        """设置当前图像（自动适配 SAM3 / SAM2）"""
+        """设置当前图像并进行特征提取（自动适配 SAM 3 / SAM 2 的处理流程）。"""
         if self.current_model_type == "sam3":
             if not self.processor:
                 return
@@ -468,6 +512,7 @@ class SAMClient(QObject):
                 print(f"SAM2 图像特征提取失败: {e}")
 
     def request_inference(self, x, y, is_click):
+        """请求基于坐标点的分割推理，由当前活跃的推理 worker 处理。"""
         if not self._active_worker:
             return
         if self.current_model_type == "sam3" and hasattr(self._active_worker, 'inference_state') and self._active_worker.inference_state is None:
@@ -475,7 +520,7 @@ class SAMClient(QObject):
         self._active_worker.request_inference(x, y, is_click)
 
     def request_text_inference(self, prompt_text):
-        """文本提示词推理（仅 SAM3 支持）"""
+        """文本提示词推理请求（仅 SAM 3 模型支持此功能）。"""
         if self.current_model_type == "sam3" and self._sam3_worker:
             if self._sam3_worker.inference_state is None:
                 return
@@ -484,12 +529,13 @@ class SAMClient(QObject):
             self._sam3_worker.request_text_inference(prompt_text)
 
     def supports_text_prompt(self):
-        """当前模型是否支持文本提示词"""
+        """检查当前模型是否支持文本提示词推理。"""
         if self.current_model_key and self.current_model_key in SAM_MODEL_MAP:
             return SAM_MODEL_MAP[self.current_model_key]["supports_text"]
         return False
 
     def cleanup(self):
+        """清理模型资源：停止推理线程、卸载模型、释放 GPU 显存。"""
         self._stop_active_worker()
         
         # 卸载模型以释放显存

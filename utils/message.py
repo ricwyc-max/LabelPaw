@@ -36,6 +36,11 @@ from PySide6.QtGui import QFont, QPainter, QPaintEvent, QColor, QFontMetrics
 
 
 class DialogOver(QWidget):
+    """通知弹窗组件，用于在界面右上角显示带滑入动画的提示消息。
+
+    支持 success / warning / danger / info 四种状态，
+    可同时堆叠显示最多 7 个通知，超出数量限制时不会创建新的实例。
+    """
     _instanceWidget: queue.Queue = queue.Queue(7)
     _instanceDel: queue.Queue = queue.Queue(7)
     _instanceQueue: queue.Queue = queue.Queue(7)
@@ -64,6 +69,16 @@ class DialogOver(QWidget):
                  _showTime: int = 3000,
                  _dieTime: int = 500,
                  ):
+        """初始化通知弹窗。
+
+        Args:
+            parent: 父级窗口，用于计算弹窗在屏幕上的定位位置。
+            text: 通知正文内容。
+            title: 通知标题，默认为空字符串。
+            flags: 通知类型，可选 "success" / "warning" / "danger" / "info"，默认为 "info"。
+            _showTime: 弹窗显示时长（毫秒），到期后开始淡出动画，默认为 3000ms。
+            _dieTime: 淡出动画时长（毫秒），默认为 500ms。
+        """
         super().__init__()
 
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
@@ -115,6 +130,7 @@ class DialogOver(QWidget):
         self.show()
 
     def paintStatus(self, flags):
+        """根据 flags 设置弹窗的背景色、边框色、文字色和图标符号。"""
         if flags == "success":
             self.QBackgroundColor = QColor(240, 249, 235)
             self.QBorder = QColor(227, 249, 214)
@@ -137,12 +153,14 @@ class DialogOver(QWidget):
             self.icon_text = "ℹ️"
 
     def paintEvent(self, event: QPaintEvent) -> None:
+        """重写绘制事件，渲染带圆角和背景色的通知弹窗。"""
         painter = QPainter(self)
         painter.setRenderHints(QPainter.Antialiasing | QPainter.TextAntialiasing)
         self.paintStatus(self.flags)
         self.drawDialog(event, painter)
 
     def drawDialog(self, event: QPaintEvent, painter: QPainter) -> None:
+        """绘制弹窗的具体内容，包含背景矩形、状态图标、标题和正文。"""
         # 设置字体
         titleFont = QFont('Microsoft YaHei', 10, QFont.Bold)
         textFont = QFont('Microsoft YaHei', 9)
@@ -179,6 +197,7 @@ class DialogOver(QWidget):
         painter.drawText(60, 38, textWidth + 10, QFontMetrics(textFont).height(), Qt.AlignLeft, self.text)
 
     def moveDialog(self) -> None:
+        """将弹窗定位到主窗口右上角，并从右侧滑入播放弹性动画。"""
         # 优化 3：定位在主窗口的右上方，并带有顺滑的从右侧滑入动画
         if self.parent_widget:
             # 获取主窗口在屏幕上的绝对坐标
@@ -199,6 +218,7 @@ class DialogOver(QWidget):
         animation.start()
 
     def disDialog(self) -> None:
+        """淡出动画：将弹窗透明度从 1 渐变为 0 后自动关闭。"""
         animation = QPropertyAnimation(self, b"windowOpacity", self)
         animation.setStartValue(1)
         animation.setEndValue(0)
@@ -206,6 +226,7 @@ class DialogOver(QWidget):
         animation.start()
 
     def closeDialog(self) -> None:
+        """关闭弹窗并从实例队列中移除。"""
         DialogOver._instanceQueue.get()
         self.close()
 

@@ -6,8 +6,26 @@ from core.shapes import RectShape, PolyShape, PointShape, RotatedRectShape, Pose
 
 
 class Exporter:
+    """标注数据导出器，支持多种格式的标注结果输出。
+
+    提供将画布中的标注图形提取为结构化数据，并导出为
+    JSON（LabelMe 格式）、YOLO（文本格式）和 Pascal VOC XML 格式的功能。
+    支持矩形、多边形、关键点、旋转框（OBB）和骨架（Pose）等标注类型。
+    """
     @staticmethod
     def extract_shapes(scene):
+        """从画布场景中提取所有非临时标注图形数据。
+
+        遍历场景中的所有图形项，根据类型（矩形、多边形、关键点、
+        旋转框、骨架）提取坐标、标签、角度等标注信息，
+        并以统一的字典列表格式返回。临时图形（is_temp=True）会被跳过。
+
+        Args:
+            scene: QGraphicsScene 画布场景对象。
+
+        Returns:
+            标注数据字典列表，每个字典包含 type、label、points 等字段。
+        """
         shapes_data = []
         for item in scene.items():
             if isinstance(item, RectShape) and not getattr(item, 'is_temp', False):
@@ -73,6 +91,19 @@ class Exporter:
 
     @staticmethod
     def save_json(filepath, image_path, image_width, image_height, shapes):
+        """导出标注数据为 JSON 格式（LabelMe 标准格式）。
+
+        生成符合 LabelMe 标注规范（版本 5.2.1）的 JSON 文件，
+        支持矩形、多边形、关键点、旋转框（含 angle/rect 字段）
+        和骨架（含 keypoints/kpt_shape/template_name 字段）的完整输出。
+
+        Args:
+            filepath: 输出文件路径。
+            image_path: 原图路径，用于记录文件名。
+            image_width: 图片宽度（像素）。
+            image_height: 图片高度（像素）。
+            shapes: 标注数据字典列表，由 extract_shapes() 生成。
+        """
         data = {
             "version": "5.2.1",
             "flags": {},
@@ -106,6 +137,23 @@ class Exporter:
 
     @staticmethod
     def save_yolo(filepath, image_width, image_height, shapes, classes_list):
+        """导出标注数据为 YOLO 格式（纯文本标注文件）。
+
+        将标注数据转换为 YOLO 训练格式，坐标归一化到 [0, 1] 范围。
+        支持以下标注类型：
+        - rectangle: 输出 class_id cx cy w h
+        - pose: 输出 class_id cx cy w h kp1_x kp1_y kp1_vis ...
+        - obb: 输出 class_id x1 y1 x2 y2 x3 y3 x4 y4
+        - polygon: 输出 class_id x1 y1 x2 y2 ...
+        - point: 输出 class_id cx cy w h（微小固定框）
+
+        Args:
+            filepath: 输出文件路径。
+            image_width: 图片宽度（像素）。
+            image_height: 图片高度（像素）。
+            shapes: 标注数据字典列表。
+            classes_list: 类别名称列表，索引值即为 class_id。
+        """
         lines = []
         for s in shapes:
             if s["label"] not in classes_list:
@@ -169,6 +217,20 @@ class Exporter:
 
     @staticmethod
     def save_xml(filepath, image_path, image_width, image_height, shapes):
+        """导出标注数据为 Pascal VOC XML 格式。
+
+        生成符合 Pascal VOC 标注规范的 XML 文件，
+        包含文件夹、文件名、图片尺寸和所有目标对象（object）的
+        边界框（bndbox: xmin, ymin, xmax, ymax）信息。
+        对旋转框和骨架使用 rect 中心坐标计算边界框。
+
+        Args:
+            filepath: 输出文件路径。
+            image_path: 原图路径。
+            image_width: 图片宽度（像素）。
+            image_height: 图片高度（像素）。
+            shapes: 标注数据字典列表。
+        """
         root = ET.Element("annotation")
         ET.SubElement(root, "folder").text = "images"
         ET.SubElement(root, "filename").text = os.path.basename(image_path)

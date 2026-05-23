@@ -7,6 +7,11 @@ from PySide6.QtGui import QPen, QBrush, QColor, QPainter, QIcon
 import random
 
 class KeypointItemWidget(QWidget):
+    """关键点列表项组件，用于骨架模板编辑器中每个关键点的属性编辑。
+
+    包含序号标签、颜色选择按钮、名称输入框和删除按钮，
+    支持修改关键点名称和颜色等属性。
+    """
     deleted = Signal(int)
     color_changed = Signal(int, str)
     name_changed = Signal(int, str)
@@ -20,6 +25,7 @@ class KeypointItemWidget(QWidget):
         self.setup_ui(name)
 
     def setup_ui(self, name):
+        """初始化 UI 布局，包含索引标签、颜色按钮、名称编辑框和删除按钮。"""
         layout = QHBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
 
@@ -65,6 +71,7 @@ class KeypointItemWidget(QWidget):
         layout.addWidget(self.del_btn)
 
     def _set_icon_color(self, icon, color):
+        """对图标进行着色处理，返回指定颜色的新图标。"""
         from PySide6.QtGui import QPainter, QIcon
         pixmap = icon.pixmap(24, 24)
         painter = QPainter(pixmap)
@@ -77,9 +84,11 @@ class KeypointItemWidget(QWidget):
         return new_icon
 
     def update_color_btn(self):
+        """更新颜色按钮的样式以反映当前选中的颜色。"""
         self.color_btn.setStyleSheet(f"background-color: {self.color}; border: 1px solid #000; border-radius: 4px;")
 
     def choose_color(self):
+        """弹出颜色选择对话框，让用户为当前关键点选择新颜色。"""
         color = QColorDialog.getColor(QColor(self.color), self, "选择颜色")
         if color.isValid():
             self.color = color.name()
@@ -87,6 +96,12 @@ class KeypointItemWidget(QWidget):
             self.color_changed.emit(self.index, self.color)
 
 class SkeletonTemplateDialog(QDialog):
+    """骨架模板编辑器对话框，用于创建和编辑关键点骨架模板。
+
+    支持在画布上通过点击添加关键点、拖拽调整位置、
+    右键删除关键点、选中两个关键点建立连接关系。
+    可通过右侧列表编辑关键点名称和颜色。
+    """
     def __init__(self, parent=None, template_manager=None, is_dark_theme=True):
         super().__init__(parent)
         self.setWindowTitle("新建骨架模板 (New Skeleton Template)")
@@ -233,6 +248,7 @@ class SkeletonTemplateDialog(QDialog):
         self.setup_ui()
         
     def setup_ui(self):
+        """初始化对话框的整体 UI 布局，包含头部参数栏、中央画布和右侧关键点列表。"""
         layout = QVBoxLayout(self)
         
         # Header
@@ -320,6 +336,7 @@ class SkeletonTemplateDialog(QDialog):
         self.redraw()
         
     def load_template(self, template_name):
+        """从模板管理器中加载指定模板的数据并显示在编辑器中。"""
         if not template_name or template_name == "无 (None)" or template_name == "None":
             self.points = []
             self.connections = []
@@ -352,15 +369,18 @@ class SkeletonTemplateDialog(QDialog):
                 self.redraw()
 
     def update_point_color(self, idx, color):
+        """更新指定索引关键点的颜色并重绘画布。"""
         if 0 <= idx < len(self.points):
             self.points[idx]["color"] = color
             self.redraw()
 
     def update_point_name(self, idx, name):
+        """更新指定索引关键点的名称。"""
         if 0 <= idx < len(self.points):
             self.points[idx]["name"] = name
             
     def delete_point(self, idx):
+        """删除指定索引的关键点，并自动调整关联的连线索引。"""
         if 0 <= idx < len(self.points):
             self.points.pop(idx)
             # update connections
@@ -380,6 +400,7 @@ class SkeletonTemplateDialog(QDialog):
             self.redraw()
 
     def canvas_mouse_press(self, event):
+        """画布鼠标按下事件：左键添加/选择关键点并自动连线，右键删除关键点。"""
         pos = self.view.mapToScene(event.pos())
         
         # Check if clicking existing point
@@ -432,6 +453,7 @@ class SkeletonTemplateDialog(QDialog):
                 self.redraw()
 
     def canvas_mouse_move(self, event):
+        """画布鼠标移动事件：拖拽关键点位置，或从选中点绘制临时连线预览。"""
         pos = self.view.mapToScene(event.pos())
         
         if self.dragging_idx != -1:
@@ -460,9 +482,11 @@ class SkeletonTemplateDialog(QDialog):
         self.redraw(draw_temp=False)
 
     def canvas_mouse_release(self, event):
+        """画布鼠标释放事件：停止拖拽操作。"""
         self.dragging_idx = -1
 
     def update_list(self):
+        """根据当前关键点数据刷新右侧列表显示。"""
         self.list_widget.clear()
         for i, pt in enumerate(self.points):
             item = QListWidgetItem()
@@ -480,6 +504,7 @@ class SkeletonTemplateDialog(QDialog):
                 item.setSelected(True)
             
     def redraw(self, draw_temp=True):
+        """重绘画布内容，包含网格线、关键点连接线和关键点本身。"""
         if draw_temp:
             self.scene.clear()
             self.temp_line = None
@@ -566,6 +591,7 @@ class SkeletonTemplateDialog(QDialog):
                 text.setPos(x+5, y-10)
 
     def save_template(self):
+        """将当前编辑器中的关键点和连线数据保存为骨架模板。"""
         if not self.points:
             QMessageBox.warning(self, "Error", "Template must have at least one keypoint.")
             return

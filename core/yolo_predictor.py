@@ -6,15 +6,22 @@ from PySide6.QtCore import QPointF, QRectF, QThread, Signal
 from ultralytics import YOLO
 
 class YoloPredictorWorker(QThread):
+    """YOLO 预测的后台工作线程。
+
+    在独立线程中运行 YOLO 模型预测，避免阻塞主界面。
+    预测完成后通过 finished 信号返回结果，
+    发生错误时通过 error 信号返回错误信息。
+    """
     finished = Signal(list)
     error = Signal(str)
-    
+
     def __init__(self, predictor, image_path):
         super().__init__()
         self.predictor = predictor
         self.image_path = image_path
-        
+
     def run(self):
+        """线程入口，执行同步预测并发射结果信号。"""
         try:
             shapes = self.predictor.predict_sync(self.image_path)
             self.finished.emit(shapes)
@@ -22,6 +29,15 @@ class YoloPredictorWorker(QThread):
             self.error.emit(str(e))
 
 class YoloPredictor:
+    """YOLO 模型预测器，支持多种任务类型。
+
+    封装 Ultralytics YOLO 模型的推理逻辑，支持：
+    - detect（目标检测）：返回矩形框
+    - segment（实例分割）：返回多边形轮廓
+    - pose（关键点检测）：返回骨架关键点
+    - obb（旋转目标检测）：返回旋转矩形（OBB）
+    同时自动从模型元数据中提取骨架连接（skeleton）和关键点名称（kpt_names）。
+    """
     def __init__(self, model_path):
         self.model_path = model_path
         self.model = YOLO(model_path)
@@ -48,17 +64,22 @@ class YoloPredictor:
         return self.predict_sync(image_path)
     
     def predict_sync(self, image_path):
-        """
-        预测单张图片并解析结果。
-        返回 shapes 列表，每个元素是个字典：
-        {
-            "type": "rect" | "poly" | "rbox" | "pose",
-            "label": "class_name",
-            "score": float,
-            "data": ...,
-            "skeleton": list[list[int]] (可选),
-            "kpt_names": list[str] (可选)
-        }
+        """对单张图片执行 YOLO 预测并解析结果。
+
+        根据模型任务类型自动分类解析：
+        - detect 任务：返回 QRectF 格式的矩形框
+        - obb 任务：返回 QPolygonF 格式的四点旋转框
+        - segment 任务：经多边形简化后返回 QPolygonF
+        - pose 任务：返回包含矩形框和关键点列表的结构化数据
+
+        Returns:
+            shapes 列表，每个元素为字典，包含以下字段：
+            - type (str): "rect" | "poly" | "rbox" | "pose"
+            - label (str): 预测类别名称
+            - score (float): 置信度分数
+            - data: 预测数据，类型依 type 而定
+            - skeleton (list[list[int]], 可选): 骨架连接索引
+            - kpt_names (list[str], 可选): 关键点名称列表
         """
         if not os.path.exists(image_path):
             return []

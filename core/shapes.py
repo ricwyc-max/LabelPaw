@@ -6,6 +6,8 @@ import math
 
 
 def point_to_segment_dist(p, a, b):
+    """计算点到线段的最短距离，并返回投影点位置。"""
+
     px, py = p.x(), p.y()
     ax, ay = a.x(), a.y()
     bx, by = b.x(), b.y()
@@ -23,6 +25,8 @@ def point_to_segment_dist(p, a, b):
 
 
 def clamp_item_position(item, proposed_pos, overflow_ratio=0.0):
+    """将提议位置限制在场景矩形范围内，允许指定的溢出比例。"""
+
     scene = item.scene()
     if not scene: return proposed_pos
     rect = scene.sceneRect()
@@ -46,7 +50,16 @@ def clamp_item_position(item, proposed_pos, overflow_ratio=0.0):
 
 
 class BaseShape:
+    """标注形状基类（Mixin），提供统一的样式、标签和悬停行为。
+
+    为所有具体形状（矩形、多边形、点、旋转框、骨架）提供：
+    - 默认笔刷和画笔样式
+    - 悬停高亮效果
+    - 标签文字显示和控制
+    """
+
     def setup_style(self, item):
+        """初始化形状的默认画笔、笔刷和交互标志。"""
         self.normal_pen = QPen(QColor(28, 126, 214), 2)
         self.normal_brush = QBrush(QColor(28, 126, 214, 50))
         self.hover_brush = QBrush(QColor(28, 126, 214, 120))
@@ -58,16 +71,19 @@ class BaseShape:
         item.setAcceptHoverEvents(True)
 
     def apply_hover_enter(self, item):
+        """鼠标悬停进入：高亮形状并切换光标。"""
         if not getattr(item, 'is_temp', False):
             item.setBrush(self.hover_brush)
             item.setCursor(Qt.PointingHandCursor)
 
     def apply_hover_leave(self, item):
+        """鼠标悬停离开：恢复默认样式和光标。"""
         if not getattr(item, 'is_temp', False):
             item.setBrush(self.normal_brush)
             item.setCursor(Qt.ArrowCursor)
 
     def setup_label(self, item):
+        """初始化标签文字项，默认隐藏，选中或悬停时显示。"""
         self.label_text = QGraphicsTextItem(item)
         self.label_text.setDefaultTextColor(QColor(255, 255, 255))
         self.label_text.setFont(QFont("Arial", 10, QFont.Bold))
@@ -75,6 +91,7 @@ class BaseShape:
         self.label_text.hide()
 
     def update_label_position(self, item):
+        """将标签文字定位在形状边界框顶部中央。"""
         if not hasattr(self, 'label_text') or not self.label_text:
             return
 
@@ -84,11 +101,13 @@ class BaseShape:
         self.label_text.setPos(x - self.label_text.boundingRect().width() / 2, y)
 
     def update_label_text(self, text):
+        """更新标签文字内容。"""
         if hasattr(self, 'label_text') and self.label_text:
             self.label_text.setPlainText(text)
             self.label_text.show()
 
     def update_label_visibility(self, item, is_selected=False, is_hovered=False):
+        """控制标签文字的显示与隐藏：选中或悬停时显示。"""
         if hasattr(self, 'label_text') and self.label_text:
             if is_selected or is_hovered:
                 self.label_text.show()
@@ -97,6 +116,11 @@ class BaseShape:
 
 
 class HandleItem(QGraphicsEllipseItem):
+    """矩形和多边形的顶点手柄，支持拖拽调整形状。
+
+    白色圆点手柄，拖拽时自动限制在场景边界内，
+    左键点击但不拖拽可删除该手柄（顶点）。
+    """
     def __init__(self, parent, is_lt=False, is_rb=False):
         r = 3.5
         super().__init__(-r, -r, r * 2, r * 2, parent)
@@ -121,6 +145,7 @@ class HandleItem(QGraphicsEllipseItem):
         super().hoverLeaveEvent(event)
 
     def mousePressEvent(self, event):
+        """手柄按下事件：记录起始位置并锁定父级移动。"""
         self._mouse_press_pos = event.pos()
         self._is_moved = False
         if self.parentItem():
@@ -134,6 +159,7 @@ class HandleItem(QGraphicsEllipseItem):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        """手柄释放事件：如未拖拽则删除该手柄（顶点），恢复父级可移动状态。"""
         super().mouseReleaseEvent(event)
         if self.parentItem():
             self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, True)
@@ -144,6 +170,7 @@ class HandleItem(QGraphicsEllipseItem):
                 parent.remove_handle(self)
 
     def itemChange(self, change, value):
+        """手柄位置变化时限制在场景边界内，并通知父级更新形状。"""
         if change == QGraphicsItem.ItemPositionChange and self.scene() and self.parentItem():
             parent = self.parentItem()
             scene_pos = parent.mapToScene(value)
@@ -162,6 +189,7 @@ class HandleItem(QGraphicsEllipseItem):
 
 
 class RectShape(QGraphicsRectItem, BaseShape):
+    """矩形标注形状，支持通过四个角落手柄拖拽调整大小。"""
     def __init__(self, rect, label=""):
         super().__init__(rect)
         self.setup_style(self)
@@ -195,11 +223,13 @@ class RectShape(QGraphicsRectItem, BaseShape):
         super().hoverLeaveEvent(event)
 
     def _update_handle_visibility(self):
+        """根据选中和悬停状态更新手柄的可见性。"""
         visible = self.isSelected() or self._hovered
         for h in [self.lt_handle, self.rt_handle, self.lb_handle, self.rb_handle]:
             h.setVisible(visible)
 
     def update_handles_pos(self):
+        """将四个手柄移动到矩形当前的四个角点位置。"""
         self._updating_handles = True
         r = self.rect()
         self.lt_handle.setPos(r.topLeft())
@@ -209,6 +239,7 @@ class RectShape(QGraphicsRectItem, BaseShape):
         self._updating_handles = False
 
     def update_from_handle(self, dragged_handle):
+        """根据被拖拽手柄的位置同步更新矩形尺寸和对手手柄位置。"""
         if self._updating_handles:
             return
 
@@ -238,6 +269,7 @@ class RectShape(QGraphicsRectItem, BaseShape):
         self._updating_handles = False
 
     def itemChange(self, change, value):
+        """监听矩形位置和选中状态变化，更新手柄和标签。"""
         if change == QGraphicsItem.ItemPositionChange and not getattr(self, 'is_temp', False):
             return super().itemChange(change, clamp_item_position(self, value))
 
@@ -252,6 +284,13 @@ class RectShape(QGraphicsRectItem, BaseShape):
 from core.translations import KEYPOINT_TRANSLATIONS
 
 class KeypointHandle(QGraphicsEllipseItem):
+    """骨架关键点手柄，支持拖拽调整位置、右键切换可见性状态。
+
+    可见性状态：
+    - 2: 可见 (visible)
+    - 1: 遮挡 (occluded)
+    - 0: 隐藏 (hidden)
+    """
     def __init__(self, index, kp_info, parent):
         r = 4
         super().__init__(-r, -r, r * 2, r * 2, parent)
@@ -316,6 +355,7 @@ class KeypointHandle(QGraphicsEllipseItem):
         super().hoverLeaveEvent(event)
         
     def mousePressEvent(self, event):
+        """关键点鼠标按下：右键弹出可见性菜单，左键开始拖拽。"""
         parent = self.parentItem()
         is_editing = parent and parent.isSelected()
 
@@ -388,6 +428,7 @@ class KeypointHandle(QGraphicsEllipseItem):
         super().mouseReleaseEvent(event)
             
     def set_visibility(self, state):
+        """设置关键点的可见性状态并更新外观（颜色和透明度）。"""
         self.visible_state = state
         if state == 2:
             self.setBrush(QBrush(self.color))
@@ -402,6 +443,7 @@ class KeypointHandle(QGraphicsEllipseItem):
             self.parentItem().update_lines()
             
     def itemChange(self, change, value):
+        """关键点位置变化时通知父级更新连线和边界框。"""
         if change == QGraphicsItem.ItemPositionHasChanged:
             if hasattr(self.parentItem(), 'update_lines'):
                 self.parentItem().update_lines()
@@ -411,6 +453,12 @@ class KeypointHandle(QGraphicsEllipseItem):
 
 
 class PoseShape(QGraphicsObject, BaseShape):
+    """骨架标注形状，基于模板显示关键点和连接线。
+
+    支持整体移动、缩放、旋转，以及单个关键点的独立拖拽。
+    关键点之间根据模板定义的连接关系绘制连线。
+    选中时显示操作手柄（缩放、旋转等）。
+    """
     def __init__(self, rect, template, label="", is_temp=False):
         super().__init__()
         self.is_temp = is_temp
@@ -563,6 +611,7 @@ class PoseShape(QGraphicsObject, BaseShape):
         pass
         
     def update_lines(self):
+        """更新所有关键点之间的连接线位置和样式。"""
         for line_item, p1, p2 in self.lines:
             kp1 = self.kps[p1]
             kp2 = self.kps[p2]
@@ -580,6 +629,7 @@ class PoseShape(QGraphicsObject, BaseShape):
                     line_item.setOpacity(1.0)
                     
     def update_bounding_box(self):
+        """根据关键点位置自动调整边界框大小和位置，使关键点始终在框内。"""
         if getattr(self, '_is_initializing', False): return
         if not self.kps: return
         
@@ -627,6 +677,8 @@ class PoseShape(QGraphicsObject, BaseShape):
             self._updating_bbox = False
 
     def _scale_keypoints(self, old_w, old_h, new_w, new_h):
+        """按缩放比例重新计算所有关键点的位置。"""
+
         if old_w == 0 or old_h == 0: return
         sx = new_w / old_w
         sy = new_h / old_h
@@ -706,6 +758,7 @@ class PoseShape(QGraphicsObject, BaseShape):
         self._is_resizing = False
 
     def set_hover_state(self, state):
+        """设置悬停状态，更新光标样式、边框和高亮尺寸。"""
         self._hovered = state
         if not self.isSelected():
             if state:
@@ -764,6 +817,7 @@ class PoseShape(QGraphicsObject, BaseShape):
             h.setVisible(visible)
 
     def itemChange(self, change, value):
+        """监听骨架的位置、选中状态变化，更新手柄显示和标签位置。"""
         if change == QGraphicsItem.ItemPositionChange and not getattr(self, 'is_temp', False) and not getattr(self, '_is_resizing', False):
             return super().itemChange(change, clamp_item_position(self, value, overflow_ratio=0.5))
         if change == QGraphicsItem.ItemSelectedHasChanged:
@@ -775,6 +829,7 @@ class PoseShape(QGraphicsObject, BaseShape):
 
 
 class PolyShape(QGraphicsPolygonItem, BaseShape):
+    """多边形标注形状，支持在边上插入顶点和拖拽调整顶点位置。"""
     def __init__(self, polygon, label="", is_temp=False):
         super().__init__(polygon)
         self.label = label
@@ -902,6 +957,7 @@ class PolyShape(QGraphicsPolygonItem, BaseShape):
         super().mouseReleaseEvent(event)
 
     def remove_handle(self, handle):
+        """删除指定手柄（顶点），至少保留 3 个顶点。"""
         if len(self.handles) <= 3:
             return
         idx = self.handles.index(handle)
@@ -916,6 +972,7 @@ class PolyShape(QGraphicsPolygonItem, BaseShape):
             h.setVisible(visible)
 
     def update_handles(self):
+        """同步手柄数量与多边形顶点数量一致，并按顺序定位。"""
         polygon = self.polygon()
         while len(self.handles) < polygon.count():
             handle = HandleItem(self)
@@ -937,12 +994,14 @@ class PolyShape(QGraphicsPolygonItem, BaseShape):
         self._updating_handles = False
 
     def setPolygon(self, polygon):
+        """设置多边形并同步更新手柄和标签位置。"""
         super().setPolygon(polygon)
         self.update_handles()
         if not self.is_temp:
             self.update_label_position(self)
 
     def update_from_handles(self):
+        """从手柄的当前位置重新构造多边形。"""
         if self.is_temp or self._updating_handles: return
         polygon = QPolygonF()
         for handle in self.handles:
@@ -951,6 +1010,7 @@ class PolyShape(QGraphicsPolygonItem, BaseShape):
         self.update_label_position(self)
 
     def itemChange(self, change, value):
+        """监听多边形位置和选中状态变化，限制在场景边界内并更新手柄和标签。"""
         if change == QGraphicsItem.ItemPositionChange and not getattr(self, 'is_temp', False):
             return super().itemChange(change, clamp_item_position(self, value))
 
@@ -964,6 +1024,7 @@ class PolyShape(QGraphicsPolygonItem, BaseShape):
 
 
 class PointShape(QGraphicsEllipseItem, BaseShape):
+    """点标注形状，在指定坐标位置显示一个红色圆点。"""
     def __init__(self, point, label=""):
         r = 4
         super().__init__(point.x() - r, point.y() - r, r * 2, r * 2)
@@ -995,6 +1056,7 @@ class PointShape(QGraphicsEllipseItem, BaseShape):
         super().hoverLeaveEvent(event)
 
     def itemChange(self, change, value):
+        """监听点位置和选中状态变化，限制在场景边界内并更新标签。"""
         if change == QGraphicsItem.ItemPositionChange:
             return super().itemChange(change, clamp_item_position(self, value))
 
@@ -1006,7 +1068,12 @@ class PointShape(QGraphicsEllipseItem, BaseShape):
 
 
 class OBBHandle(QGraphicsItem):
-    """自定义胶囊形/圆形的 OBB 操作手柄 (接管底层鼠标事件)"""
+    """OBB（旋转框和骨架）操作手柄，支持缩放、旋转操作。
+
+    根据 handle_type 不同显示为胶囊形（top/bottom/left/right 缩放手柄）
+    或圆形（rotate/tl/tr/bl/br 旋转和角落手柄），
+    接管底层鼠标事件实现拖拽操作。
+    """
 
     def __init__(self, handle_type, parent):
         super().__init__(parent)
@@ -1051,6 +1118,7 @@ class OBBHandle(QGraphicsItem):
 
     # ================= 鼠标事件接管 =================
     def mousePressEvent(self, event):
+        """手柄按下：锁定父级不被整体拖拽，记录当前拖拽的手柄类型。"""
         if event.button() == Qt.LeftButton:
             if self.handle_type == 'rotate':
                 self.setCursor(Qt.ClosedHandCursor)
@@ -1063,6 +1131,7 @@ class OBBHandle(QGraphicsItem):
             super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
+        """手柄拖拽：将场景坐标发送给父级进行形状变换解算。"""
         if self.parentItem()._dragging_handle == self.handle_type:
             # 将拖拽产生的全局坐标，实时发送给父容器进行解算
             self.parentItem().handle_dragged(self.handle_type, event.scenePos())
@@ -1071,6 +1140,7 @@ class OBBHandle(QGraphicsItem):
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        """手柄释放：恢复父级可移动状态，触发状态变化信号以保存撤销记录。"""
         if event.button() == Qt.LeftButton:
             self.parentItem()._dragging_handle = None
             # 解除父容器锁定
@@ -1088,6 +1158,7 @@ class OBBHandle(QGraphicsItem):
 
 
 class RotatedRectShape(QGraphicsObject, BaseShape):
+    """旋转矩形（OBB）标注形状，支持方向和尺寸调整。"""
     def __init__(self, cx, cy, w, h, angle, label="", is_temp=False):
         super().__init__()
         self.is_temp = is_temp
@@ -1147,6 +1218,7 @@ class RotatedRectShape(QGraphicsObject, BaseShape):
         pass
 
     def update_geometry(self):
+        """更新旋转框的边界矩形和所有操作手柄的位置。"""
         w, h = self.box_w, self.box_h
         self.rect_item.setRect(-w / 2, -h / 2, w, h)
 
@@ -1162,6 +1234,7 @@ class RotatedRectShape(QGraphicsObject, BaseShape):
         self.update_label_position(self)
 
     def handle_dragged(self, handle_type, scene_pos):
+        """处理手柄拖拽事件：根据手柄类型执行缩放或旋转操作。"""
         self._is_resizing = True
 
         local_pos = self.mapFromScene(scene_pos)
@@ -1204,6 +1277,7 @@ class RotatedRectShape(QGraphicsObject, BaseShape):
         self._is_resizing = False
 
     def polygon(self):
+        """返回旋转框四个顶点在场景坐标系中的多边形。"""
         w, h = self.box_w, self.box_h
         pts = [
             QPointF(-w / 2, -h / 2),
@@ -1226,12 +1300,14 @@ class RotatedRectShape(QGraphicsObject, BaseShape):
         super().hoverLeaveEvent(event)
 
     def _update_handle_visibility(self):
+        """根据选中和悬停状态更新操作手柄的可见性。"""
         if self.is_temp: return
         visible = self.isSelected() or self._hovered
         for h in self.handles:
             h.setVisible(visible)
 
     def itemChange(self, change, value):
+        """监听旋转框的位置和选中状态变化，限制在场景边界内并更新标签。"""
         if change == QGraphicsItem.ItemPositionChange and not getattr(self, 'is_temp', False) and not getattr(self, '_is_resizing', False):
             scene = self.scene()
             if scene:

@@ -140,7 +140,7 @@ class TrainWorker(QObject):
 
     def _make_train_script(self):
         """生成训练用的 Python 脚本内容。"""
-        return f'''import sys, os, re, shutil, zipfile
+        return f'''import sys, os, re, shutil, zipfile, time
 sys.stdout = sys.stderr  # 合并输出流便于捕获
 from ultralytics import YOLO
 
@@ -156,8 +156,13 @@ if os.path.exists(model_path):
         with zipfile.ZipFile(model_path) as _zf:
             pass
     except zipfile.BadZipFile:
-        os.remove(model_path)
-        print("检测到损坏的模型文件，自动删除重新下载...")
+        for _ in range(5):
+            try:
+                os.remove(model_path)
+                print("检测到损坏的模型文件，自动删除重新下载...")
+                break
+            except PermissionError:
+                time.sleep(1)
 
 # 也检查工作目录中可能存在的损坏文件
 if os.path.exists(model_name):
@@ -165,8 +170,14 @@ if os.path.exists(model_name):
         with zipfile.ZipFile(model_name) as _zf:
             pass
     except zipfile.BadZipFile:
-        os.remove(model_name)
-        print("检测到损坏的模型文件，已删除")
+        # 多试几次删除（可能被杀软或前一进程锁定）
+        for _ in range(5):
+            try:
+                os.remove(model_name)
+                print("检测到损坏的模型文件，已删除")
+                break
+            except PermissionError:
+                time.sleep(1)
 
 if not os.path.exists(model_path):
     model = YOLO({self.pretrained_path!r})

@@ -152,9 +152,9 @@ class TrainWorker(QObject):
         return """
 import sys, os, re, shutil, zipfile, time, uuid
 sys.stdout = sys.stderr
-from ultralytics import YOLO
 import torch.multiprocessing as _mp
 _mp.freeze_support()
+from ultralytics import YOLO
 
 model_name = os.path.basename(__pretrained__)
 weights_dir = __save_path__

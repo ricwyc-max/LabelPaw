@@ -213,12 +213,15 @@ print("__ALL_DONE__")
             if not line:
                 continue
 
-            # 下载进度行（含 \r 刷新标记 → YOLO 输出中可能被 QProcess 拆开）
+            # 下载进度行（用进度条代替日志刷屏）
             if "Downloading" in line:
                 m_pct = re.search(r"(\d+)%", line)
                 if m_pct:
                     self.progress_signal.emit(int(m_pct.group(1)))
-                # 不输出到日志，用进度条代替
+                # 只在首次下载时输出一行提示
+                if not hasattr(self, '_download_started'):
+                    self._download_started = True
+                    self.log_signal.emit("正在下载预训练模型，请稍候...\n")
                 continue
 
             # 训练轮次进度

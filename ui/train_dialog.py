@@ -193,7 +193,7 @@ else:
 # 自动检测 CUDA，不可用时回退 CPU
 import torch as _torch
 _device = __device__
-if _device != "cpu" and not _torch.cuda.is_available():
+if _device != "cpu" and (_torch.cuda.device_count() == 0 or not _torch.cuda.is_available()):
     _device = "cpu"
     print("CUDA 不可用，自动切换至 CPU 训练")
 
@@ -396,8 +396,8 @@ class TrainDialog(QDialog):
             has_cuda = False
         if has_cuda:
             device_count = torch.cuda.device_count()
-            self.combo_device.addItems([f"cuda{i}" for i in range(device_count)] + ["cpu"])
-            self.combo_device.setCurrentText("cuda0" if device_count > 0 else "cpu")
+            self.combo_device.addItems([str(i) for i in range(device_count)] + ["cpu"])
+            self.combo_device.setCurrentText("0" if device_count > 0 else "cpu")
         else:
             self.combo_device.addItems(["cpu"])
             self.combo_device.setCurrentText("cpu")

@@ -473,6 +473,7 @@ class TrainDialog(QDialog):
         save_path = self.save_path.text().strip()
         if not save_path:
             save_path = os.path.join(find_project_root(), "weights")
+        os.makedirs(save_path, exist_ok=True)
         params = {
             "exp_name": exp_name,
             "save_path": save_path,
@@ -535,7 +536,5 @@ class TrainDialog(QDialog):
         if not save_path:
             save_path = os.path.join(find_project_root(), "weights")
         train_dir = os.path.join(save_path, "train")
-        if os.path.exists(train_dir):
-            os.startfile(train_dir)
-        else:
-            QMessageBox.information(self, "提示", "尚未进行训练，训练目录不存在")
+        os.makedirs(train_dir, exist_ok=True)
+        os.startfile(train_dir)

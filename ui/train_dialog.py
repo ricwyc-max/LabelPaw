@@ -130,6 +130,8 @@ class TrainWorker(QObject):
         self.process.setProcessChannelMode(QProcess.MergedChannels)
         self.process.readyReadStandardOutput.connect(self._on_stdout)
         self.process.finished.connect(lambda: self._on_finished(script_path))
+        # 设置工作目录为项目根目录，使 YOLO 模型下载/保存路径一致
+        self.process.setWorkingDirectory(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
         python = sys.executable
         self.process.start(python, [script_path])

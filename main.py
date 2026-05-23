@@ -88,6 +88,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.predict_movie = QMovie(":/icon/Loading.gif")
         self.predict_movie.frameChanged.connect(self.update_predict_icon)
 
+        # 默认最大化启动
+        self.showMaximized()
+
     def update_predict_icon(self):
         self.btnPredict.setIcon(QIcon(self.predict_movie.currentPixmap()))
 
@@ -170,6 +173,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # 坐标标签（statusBar 永久控件）
         self.coordLabel = QLabel("坐标: X: 0, Y: 0")
         self.statusBar.addPermanentWidget(self.coordLabel)
+
+        # 右侧面板缩小，图片区域扩大
+        self.rightPanel.setMinimumWidth(160)
+        self.rightPanel.setMaximumWidth(220)
+        self.contentSplitter.setStretchFactor(0, 3)
+        self.contentSplitter.setStretchFactor(1, 1)
 
     def _init_pose_templates(self):
         templates = self.template_manager.get_template_names()

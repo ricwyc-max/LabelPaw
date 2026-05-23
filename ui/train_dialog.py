@@ -120,9 +120,9 @@ class TrainWorker(QObject):
 
     def start(self):
         """启动训练子进程。"""
-        # 创建临时训练脚本
+        # 创建临时训练脚本（放在项目根目录）
         script = self._make_train_script()
-        script_path = os.path.join(os.path.dirname(self.data_yaml_path), "_train_script.py")
+        script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_train_script.py")
         with open(script_path, "w", encoding="utf-8") as f:
             f.write(script)
 
@@ -138,13 +138,28 @@ class TrainWorker(QObject):
 
     def _make_train_script(self):
         """生成训练用的 Python 脚本内容。"""
-        return f'''import sys, re
+        return f'''import sys, os, re, shutil
+from datetime import datetime
 sys.stdout = sys.stderr  # 合并输出流便于捕获
 from ultralytics import YOLO
 
-model = YOLO({self.pretrained_path!r})
+# 模型下载到数据集同级的 weights/ 目录
+model_name = os.path.basename({self.pretrained_path!r})
+weights_dir = os.path.join(os.path.dirname({self.data_yaml_path!r}), "..", "weights")
+os.makedirs(weights_dir, exist_ok=True)
+model_path = os.path.join(weights_dir, model_name)
+if not os.path.exists(model_path):
+    model = YOLO({self.pretrained_path!r})
+    if os.path.exists(model_name):
+        shutil.move(model_name, model_path)
+else:
+    model = YOLO(model_path)
+
+ts = datetime.now().strftime("%m%d_%H%M")
 results = model.train(
     data={self.data_yaml_path!r},
+    project=os.path.join(weights_dir, "train"),
+    name=ts,
     epochs={self.params["epochs"]},
     batch={self.params["batch"]},
     imgsz={self.params["imgsz"]},
@@ -159,9 +174,8 @@ metrics = model.val()
 print(f"__METRICS__ mAP50={{metrics.box.map50:.4f}} mAP50-95={{metrics.box.map:.4f}}")
 save_dir = getattr(model.trainer, 'save_dir', '') if hasattr(model, 'trainer') else ''
 if save_dir:
-    import os as _os
-    best = _os.path.join(save_dir, "weights", "best.pt")
-    if _os.path.exists(best):
+    best = os.path.join(save_dir, "weights", "best.pt")
+    if os.path.exists(best):
         print(f"__BEST__{{best}}")
 print("__ALL_DONE__")
 '''

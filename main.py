@@ -31,6 +31,7 @@ from ui.template_dialog import SkeletonTemplateDialog
 from ui.train_dialog import TrainDialog
 from ui.export_onnx_dialog import ExportOnnxDialog
 from ui.model_selector_dialog import ModelSelectorDialog
+from ui.batch_process_dialog import BatchProcessDialog
 from ui.theme import DARK_THEME, LIGHT_THEME
 from core.canvas import Canvas, CanvasMode
 from core.sam_client import SAMClient, SAM_MODEL_MAP
@@ -328,6 +329,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.btnDatasetTool.clicked.connect(self.open_dataset_tool)
         self.btnExportONNX.clicked.connect(self.open_export_onnx_dialog)
         self.btnTrain.clicked.connect(self.open_train_dialog)
+        self.btnBatchProcess.clicked.connect(self.open_batch_process_dialog)
 
         # self.actionFormatJSON.triggered.connect(lambda: self.set_current_format("json"))
         # self.actionFormatYOLO.triggered.connect(lambda: self.set_current_format("yolo"))
@@ -718,6 +720,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         dialog = ExportOnnxDialog(self)
         dialog.exec()
 
+    def open_batch_process_dialog(self):
+        """打开批量处理对话框"""
+        # 断开主窗口的信号连接，防止批量处理结果被添加到主界面画布
+        try:
+            self.sam_client.text_result_ready.disconnect(self.handle_text_results)
+        except:
+            pass
+
+        dialog = BatchProcessDialog(self.sam_client, self)
+        dialog.exec()
+
+        # 重新连接信号
+        self.sam_client.text_result_ready.connect(self.handle_text_results)
+
     def trigger_sam_prompt(self):
         if self.scene.mode == CanvasMode.POINT:
             DialogOver(self, "点标注模式下无法使用 SAM 智能提取", "提示", "warning")
@@ -790,6 +806,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.btnDatasetTool.setText("")
             self.btnExportONNX.setText("")
             self.btnTrain.setText("")
+            self.btnBatchProcess.setText("")
             self.samIcon.hide() # 收缩时隐藏左侧图标
             # SAM 开关竖向显示
             self.samSwitch.setFixedSize(26, 50)
@@ -816,6 +833,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.btnDatasetTool.setText(" 数据集处理")
             self.btnExportONNX.setText(" 模型转ONNX")
             self.btnTrain.setText(" 模型训练")
+            self.btnBatchProcess.setText(" 批量标注")
             self.samIcon.show() # 展开时显示左侧图标
             # SAM 开关横向显示
             self.samSwitch.setFixedSize(50, 26)

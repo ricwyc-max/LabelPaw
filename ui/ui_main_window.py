@@ -354,6 +354,9 @@ class Ui_MainWindow(object):
         self.btnTrain = QPushButton(self.toolBar)
         self.btnTrain.setObjectName(u"btnTrain")
         self.toolBar.addWidget(self.btnTrain)
+        self.btnBatchProcess = QPushButton(self.toolBar)
+        self.btnBatchProcess.setObjectName(u"btnBatchProcess")
+        self.toolBar.addWidget(self.btnBatchProcess)
         MainWindow.addToolBar(Qt.LeftToolBarArea, self.toolBar)
 
         self.toolBar.addAction(self.actionOpen)
@@ -413,5 +416,9 @@ class Ui_MainWindow(object):
         self.btnTrain.setToolTip(QCoreApplication.translate("MainWindow", u"YOLO \u6a21\u578b\u8bad\u7ec3", None))
 #endif // QT_CONFIG(tooltip)
         self.btnTrain.setText(QCoreApplication.translate("MainWindow", u" \u6a21\u578b\u8bad\u7ec3", None))
+#if QT_CONFIG(tooltip)
+        self.btnBatchProcess.setToolTip(QCoreApplication.translate("MainWindow", u"\u6279\u91cf\u81ea\u52a8\u6807\u6ce8", None))
+#endif // QT_CONFIG(tooltip)
+        self.btnBatchProcess.setText(QCoreApplication.translate("MainWindow", u" \u6279\u91cf\u6807\u6ce8", None))
     # retranslateUi
 

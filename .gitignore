@@ -13,3 +13,4 @@ __pycache__/
 
 yolotest/
 *.pt
+/runs
